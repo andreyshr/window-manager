@@ -1,26 +1,51 @@
-export class EventEmitter {
-  private events: Record<string, ((...arg: any[]) => void)[]> = {};
+export class EventEmitter<
+  TEventMap extends Record<string, any> = Record<string, any>,
+> {
+  private events: {
+    [K in keyof TEventMap]?: Array<(data: TEventMap[K]) => void>;
+  } = {};
 
-  on(event: string, cb: (...arg: any[]) => void) {
+  /**
+   * Subscribe to an event
+   * @param event Event name
+   * @param callback Callback function that receives event data
+   */
+  on<K extends keyof TEventMap>(
+    event: K,
+    callback: (data: TEventMap[K]) => void
+  ) {
     if (!this.events[event]) {
       this.events[event] = [];
     }
-    this.events[event].push(cb);
+    this.events[event]?.push(callback);
   }
 
-  off(event: string, cb: (...arg: any[]) => void) {
+  /**
+   * Unsubscribe from an event
+   * @param event Event name
+   * @param callback Callback to remove
+   */
+  off<K extends keyof TEventMap>(
+    event: K,
+    callback: (data: TEventMap[K]) => void
+  ) {
     if (!this.events[event]) return;
 
-    this.events[event] = this.events[event].filter((_cb) => _cb !== cb);
+    this.events[event] = this.events[event]?.filter((_cb) => _cb !== callback);
 
-    if (this.events[event].length === 0) {
+    if (this.events[event]?.length === 0) {
       delete this.events[event];
     }
   }
 
-  emit(event: string, ...args: any[]) {
+  /**
+   * Emit an event with data
+   * @param event Event name
+   * @param data Event data
+   */
+  emit<K extends keyof TEventMap>(event: K, data: TEventMap[K]) {
     if (this.events[event]) {
-      this.events[event].forEach((cb) => cb(...args));
+      this.events[event]?.forEach((cb) => cb(data));
     }
   }
 }

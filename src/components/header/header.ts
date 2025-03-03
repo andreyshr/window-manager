@@ -1,9 +1,10 @@
 import { EventEmitter } from '../../event-emitter/event-emitter';
-import { EVENTS } from '../../event-emitter/events';
+import { Events, HeaderEvent } from '../../event-emitter/events';
 import { Controls } from './controls';
-import { ItemSchema } from '../window-manager';
+import { ItemSchema } from '../../types';
+import { Component } from '../../types';
 
-export class Header extends EventEmitter {
+export class Header extends EventEmitter<HeaderEvent> implements Component {
   private schema: ItemSchema;
   private root: HTMLElement;
   private element: HTMLElement;
@@ -29,8 +30,8 @@ export class Header extends EventEmitter {
 
   private createControls() {
     const controls = new Controls(this.schema, this.element);
-    controls.on(EVENTS.CLOSE_WINDOW, this.onClose);
-    controls.on(EVENTS.EXPAND, this.onExpand);
+    controls.on(Events.CloseWindow, this.onClose);
+    controls.on(Events.Expand, this.onExpand);
     return controls;
   }
 
@@ -39,28 +40,28 @@ export class Header extends EventEmitter {
   }
 
   private onClose = () => {
-    this.emit(EVENTS.CLOSE_WINDOW);
+    this.emit(Events.CloseWindow, undefined);
   };
 
-  private onExpand = (isMaximized: boolean) => {
-    this.emit(EVENTS.EXPAND, isMaximized);
+  private onExpand = ({ isMaximized }: { isMaximized: boolean }) => {
+    this.emit(Events.Expand, { isMaximized });
   };
 
   private onMouseDown = (event: MouseEvent) => {
     if (!this.isAvailable || event.button !== 0) return;
-    this.emit(EVENTS.DRAG_START, event);
+    this.emit(Events.DragStart, { event });
     document.addEventListener('mousemove', this.onMouseMove);
     document.addEventListener('mouseup', this.onMouseUp);
   };
 
   private onMouseMove = (event: MouseEvent) => {
     if (!this.isAvailable) return;
-    this.emit(EVENTS.DRAG, event);
+    this.emit(Events.Drag, { event });
   };
 
   private onMouseUp = (event: MouseEvent) => {
     if (!this.isAvailable) return;
-    this.emit(EVENTS.DRAG_END, event);
+    this.emit(Events.DragEnd, { event });
     document.removeEventListener('mousemove', this.onMouseMove);
     document.removeEventListener('mouseup', this.onMouseUp);
   };
@@ -74,8 +75,8 @@ export class Header extends EventEmitter {
   }
 
   destroy() {
-    this.controls.off(EVENTS.CLOSE_WINDOW, this.onClose);
-    this.controls.off(EVENTS.EXPAND, this.onExpand);
+    this.controls.off(Events.CloseWindow, this.onClose);
+    this.controls.off(Events.Expand, this.onExpand);
     this.controls.destroy();
   }
 }

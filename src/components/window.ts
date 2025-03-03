@@ -1,7 +1,7 @@
 import { ResizerPosition, Resizer } from './resizer';
 import { EventEmitter } from '../event-emitter/event-emitter';
-import { EVENTS } from '../event-emitter/events';
-import { ItemSchema } from './window-manager';
+import { Events, WindowEvent } from '../event-emitter/events';
+import { ItemSchema } from '../types';
 import { Header } from './header/header';
 import { uuid } from '../utils';
 import { ResizeBoundsProcessor } from '../processors/resize-bounds-processor';
@@ -12,6 +12,7 @@ import {
 } from '../processors/preset-bounds-processor';
 import { SnapProcessor } from '../processors/snap-processor';
 import { Snap } from '../processors/types';
+import { Component } from '../types';
 
 export type WindowOptions = {
   snapThreshold: number;
@@ -26,7 +27,7 @@ export type WindowBounds = {
   top: number;
 };
 
-export class Window extends EventEmitter {
+export class Window extends EventEmitter<WindowEvent> implements Component {
   private schema: ItemSchema;
   private root: HTMLElement;
   private element: HTMLElement;
@@ -85,26 +86,26 @@ export class Window extends EventEmitter {
     element.className = 'wm-window';
     element.style.zIndex = `${this.index}`;
     element.addEventListener('mousedown', () => {
-      this.emit(EVENTS.SELECT_WINDOW, this.uid);
+      this.emit(Events.SelectWindow, { id: this.uid });
     });
     return element;
   }
 
   private createHeader() {
     const header = new Header(this.schema, this.element);
-    header.on(EVENTS.CLOSE_WINDOW, this.onClose);
-    header.on(EVENTS.EXPAND, this.onExpand);
-    header.on(EVENTS.DRAG_START, this.onDragStart);
-    header.on(EVENTS.DRAG, this.onDrag);
-    header.on(EVENTS.DRAG_END, this.onDragEnd);
+    header.on(Events.CloseWindow, this.onClose);
+    header.on(Events.Expand, this.onExpand);
+    header.on(Events.DragStart, this.onDragStart);
+    header.on(Events.Drag, this.onDrag);
+    header.on(Events.DragEnd, this.onDragEnd);
     return header;
   }
 
   private createResizer() {
     const resizer = new Resizer(this.schema, this.element);
-    resizer.on(EVENTS.RESIZE_START, this.onResizeStart);
-    resizer.on(EVENTS.RESIZE, this.onResize);
-    resizer.on(EVENTS.RESIZE_END, this.onResizeEnd);
+    resizer.on(Events.ResizeStart, this.onResizeStart);
+    resizer.on(Events.Resize, this.onResize);
+    resizer.on(Events.ResizeEnd, this.onResizeEnd);
     return resizer;
   }
 
@@ -156,22 +157,22 @@ export class Window extends EventEmitter {
   }
 
   private onClose = () => {
-    this.emit(EVENTS.CLOSE_WINDOW, this.uid);
+    this.emit(Events.CloseWindow, { id: this.uid });
   };
 
-  private onExpand = (isMaximized: boolean) => {
+  private onExpand = ({ isMaximized }: { isMaximized: boolean }) => {
     if (isMaximized) this.handleMaximized();
     else this.handleMinimized();
   };
 
-  private onDragStart = () => {
-    this.emit(EVENTS.DRAG_START);
+  private onDragStart = ({ event }: { event: MouseEvent }) => {
+    this.emit(Events.DragStart, { event });
   };
 
-  private onDrag = (event: MouseEvent) => {
+  private onDrag = ({ event }: { event: MouseEvent }) => {
     const { bounds } = this.dragBoundsProcessor.getBounds(event, this.bounds);
     this.snap = this.snapProcessor.getSnap(event);
-    this.emit(EVENTS.DRAG, this.snap);
+    this.emit(Events.Drag, { event, snap: this.snap });
 
     if (bounds.top <= 0) return;
 
@@ -179,7 +180,7 @@ export class Window extends EventEmitter {
     this.updateElementBounds(this.bounds);
   };
 
-  private onDragEnd = () => {
+  private onDragEnd = ({ event }: { event: MouseEvent }) => {
     if (this.snap) {
       let { bounds } = this.presetBoundsProcessor.getBounds(this.snap);
 
@@ -188,11 +189,20 @@ export class Window extends EventEmitter {
     }
 
     this.snap = undefined;
-    this.emit(EVENTS.DRAG_END);
+    this.emit(Events.DragEnd, { event });
   };
 
-  private onResizeStart = () => {
-    this.emit(EVENTS.RESIZE_START);
+  private onResizeStart = ({
+    event,
+    resizerPosition,
+  }: {
+    event: MouseEvent;
+    resizerPosition: ResizerPosition;
+  }) => {
+    this.emit(Events.ResizeStart, {
+      event,
+      resizerPosition,
+    });
   };
 
   private onResize = ({
@@ -200,9 +210,13 @@ export class Window extends EventEmitter {
     resizerPosition,
   }: {
     event: MouseEvent;
-    resizerPosition: ResizerPosition;
+    resizerPosition: ResizerPosition | null;
   }) => {
-    this.emit(EVENTS.RESIZE);
+    this.emit(Events.Resize, {
+      event,
+      resizerPosition,
+    });
+    if (!resizerPosition) return;
     const { bounds } = this.resizeBoundsProcessor.getBounds(
       event,
       this.bounds,
@@ -220,8 +234,17 @@ export class Window extends EventEmitter {
     this.updateElementBounds(this.bounds);
   };
 
-  private onResizeEnd = () => {
-    this.emit(EVENTS.RESIZE_END);
+  private onResizeEnd = ({
+    event,
+    resizerPosition,
+  }: {
+    event: MouseEvent;
+    resizerPosition: ResizerPosition | null;
+  }) => {
+    this.emit(Events.ResizeEnd, {
+      event,
+      resizerPosition,
+    });
   };
 
   setIndex(index: number) {
@@ -254,14 +277,14 @@ export class Window extends EventEmitter {
   }
 
   destroy() {
-    this.header.off(EVENTS.CLOSE_WINDOW, this.onClose);
-    this.header.off(EVENTS.EXPAND, this.onExpand);
-    this.header.off(EVENTS.DRAG_START, this.onDragStart);
-    this.header.off(EVENTS.DRAG, this.onDrag);
-    this.header.off(EVENTS.DRAG_END, this.onDragEnd);
-    this.resizer.off(EVENTS.RESIZE_START, this.onResizeStart);
-    this.resizer.off(EVENTS.RESIZE, this.onResize);
-    this.resizer.off(EVENTS.RESIZE_END, this.onResizeEnd);
+    this.header.off(Events.CloseWindow, this.onClose);
+    this.header.off(Events.Expand, this.onExpand);
+    this.header.off(Events.DragStart, this.onDragStart);
+    this.header.off(Events.Drag, this.onDrag);
+    this.header.off(Events.DragEnd, this.onDragEnd);
+    this.resizer.off(Events.ResizeStart, this.onResizeStart);
+    this.resizer.off(Events.Resize, this.onResize);
+    this.resizer.off(Events.ResizeEnd, this.onResizeEnd);
     this.header.destroy();
     this.resizer.destroy();
     this.root.removeChild(this.element);

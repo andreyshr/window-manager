@@ -5,9 +5,11 @@ import {
   SNAP_THRESHOLD,
 } from '../constants';
 import { EventEmitter } from '../event-emitter/event-emitter';
-import { EVENTS } from '../event-emitter/events';
+import { Events, WindowManagerEvent } from '../event-emitter/events';
 import { Window } from './window';
 import { Snap } from '../processors/types';
+import { ResizerPosition } from './resizer';
+import { ItemSchema } from '../types';
 
 export type WindowManagerCtorOptions = {
   snapThreshold?: number;
@@ -17,17 +19,7 @@ export type WindowManagerCtorOptions = {
 
 export type WindowManagerOptions = Required<WindowManagerCtorOptions>;
 
-export type ItemSchema = {
-  title: string;
-  width: number;
-  height: number;
-  position: [number, number];
-  isClosable: boolean;
-  ctor: (window: Window) => HTMLElement;
-  props?: Record<string, unknown>;
-};
-
-export class WindowManager extends EventEmitter {
+export class WindowManager extends EventEmitter<WindowManagerEvent> {
   private root: HTMLElement;
   private options: WindowManagerOptions;
   private element: HTMLElement;
@@ -55,13 +47,36 @@ export class WindowManager extends EventEmitter {
     this.content.push(window);
   }
 
-  removeWindow(id: string) {
-    this.onClose(id);
+  closeWindow(id: string) {
+    const window = this.content.find((item) => item.getUid() === id);
+    if (window) {
+      window.destroy();
+      this.content = this.content.filter((item) => item.getUid() !== id);
+      this.emit(Events.CloseWindow, { id });
+    }
   }
 
-  bringWindowToFront(id: string) {}
+  bringWindowToFront(id: string) {
+    const index = this.content.findIndex((item) => item.getUid() === id);
+    if (index !== -1) {
+      this.content.push(this.content.splice(index, 1)[0]);
+    }
+    this.content.forEach((item, index) => {
+      item.setIndex(index);
+    });
+    this.emit(Events.SelectWindow, { id });
+  }
 
-  sendWindowToBack(id: string) {}
+  sendWindowToBack(id: string) {
+    const index = this.content.findIndex((item) => item.getUid() === id);
+    if (index !== -1) {
+      this.content.unshift(this.content.splice(index, 1)[0]);
+    }
+    this.content.forEach((item, index) => {
+      item.setIndex(index);
+    });
+    this.emit(Events.SelectWindow, { id });
+  }
 
   toJson(): ItemSchema[] {
     return this.content.map((item) => ({
@@ -77,7 +92,7 @@ export class WindowManager extends EventEmitter {
   destroy() {
     this.content.forEach((item) => {
       this.removeListeners(item);
-      this.onClose(item.getUid());
+      this.closeWindow(item.getUid());
     });
     this.root.removeChild(this.element);
   }
@@ -141,71 +156,95 @@ export class WindowManager extends EventEmitter {
   }
 
   private setListeners(window: Window) {
-    window.on(EVENTS.CLOSE_WINDOW, this.onClose);
-    window.on(EVENTS.SELECT_WINDOW, this.onSelectWindow);
-    window.on(EVENTS.DRAG_START, this.onDragStart);
-    window.on(EVENTS.DRAG, this.onDrag);
-    window.on(EVENTS.DRAG_END, this.onDragEnd);
-    window.on(EVENTS.RESIZE_START, this.onResizeStart);
-    window.on(EVENTS.RESIZE, this.onResize);
-    window.on(EVENTS.RESIZE_END, this.onResizeEnd);
+    window.on(Events.CloseWindow, this.onClose);
+    window.on(Events.SelectWindow, this.onSelectWindow);
+    window.on(Events.DragStart, this.onDragStart);
+    window.on(Events.Drag, this.onDrag);
+    window.on(Events.DragEnd, this.onDragEnd);
+    window.on(Events.ResizeStart, this.onResizeStart);
+    window.on(Events.Resize, this.onResize);
+    window.on(Events.ResizeEnd, this.onResizeEnd);
   }
 
   private removeListeners(window: Window) {
-    window.off(EVENTS.CLOSE_WINDOW, this.onClose);
-    window.off(EVENTS.SELECT_WINDOW, this.onSelectWindow);
-    window.off(EVENTS.DRAG_START, this.onDragStart);
-    window.off(EVENTS.DRAG, this.onDrag);
-    window.off(EVENTS.DRAG_END, this.onDragEnd);
-    window.off(EVENTS.RESIZE_START, this.onResizeStart);
-    window.off(EVENTS.RESIZE, this.onResize);
-    window.off(EVENTS.RESIZE_END, this.onResizeEnd);
+    window.off(Events.CloseWindow, this.onClose);
+    window.off(Events.SelectWindow, this.onSelectWindow);
+    window.off(Events.DragStart, this.onDragStart);
+    window.off(Events.Drag, this.onDrag);
+    window.off(Events.DragEnd, this.onDragEnd);
+    window.off(Events.ResizeStart, this.onResizeStart);
+    window.off(Events.Resize, this.onResize);
+    window.off(Events.ResizeEnd, this.onResizeEnd);
   }
 
-  private onClose = (id: string) => {
-    const window = this.content.find((item) => item.getUid() === id);
-    if (window) {
-      window.destroy();
-      this.content = this.content.filter((item) => item.getUid() !== id);
-      this.emit(EVENTS.CLOSE_WINDOW);
-    }
+  private onClose = ({ id }: { id: string }) => {
+    this.closeWindow(id);
   };
 
-  private onSelectWindow = (id: string) => {
-    const index = this.content.findIndex((item) => item.getUid() === id);
-    if (index !== -1) {
-      this.content.push(this.content.splice(index, 1)[0]);
-    }
-    this.content.forEach((item, index) => {
-      item.setIndex(index);
-    });
-    this.emit(EVENTS.SELECT_WINDOW);
+  private onSelectWindow = ({ id }: { id: string }) => {
+    this.bringWindowToFront(id);
   };
 
-  private onDragStart = () => {
-    this.emit(EVENTS.DRAG_START);
+  private onDragStart = ({ event }: { event: MouseEvent }) => {
+    this.emit(Events.DragStart, { event });
   };
 
-  private onDrag = (snap: Snap | undefined) => {
+  private onDrag = ({
+    event,
+    snap,
+  }: {
+    event: MouseEvent;
+    snap: Snap | undefined;
+  }) => {
     if (snap) this.showSnapPreview(snap);
     else this.hideSnapPreview();
-    this.emit(EVENTS.DRAG);
+    this.emit(Events.Drag, {
+      event,
+      snap,
+    });
   };
 
-  private onDragEnd = () => {
+  private onDragEnd = ({ event }: { event: MouseEvent }) => {
     this.hideSnapPreview();
-    this.emit(EVENTS.DRAG_END);
+    this.emit(Events.DragEnd, { event });
   };
 
-  private onResizeStart = () => {
-    this.emit(EVENTS.RESIZE_START);
+  private onResizeStart = ({
+    event,
+    resizerPosition,
+  }: {
+    event: MouseEvent;
+    resizerPosition: ResizerPosition;
+  }) => {
+    this.emit(Events.ResizeStart, {
+      event,
+      resizerPosition,
+    });
   };
 
-  private onResize = () => {
-    this.emit(EVENTS.RESIZE);
+  private onResize = ({
+    event,
+    resizerPosition,
+  }: {
+    event: MouseEvent;
+    resizerPosition: ResizerPosition | null;
+  }) => {
+    this.emit(Events.Resize, {
+      event,
+      resizerPosition,
+    });
   };
 
-  private onResizeEnd = () => {
-    this.emit(EVENTS.RESIZE_END);
+  private onResizeEnd = ({
+    event,
+    resizerPosition,
+  }: {
+    event: MouseEvent;
+    resizerPosition: ResizerPosition | null;
+  }) => {
+    this.emit(Events.ResizeEnd, {
+      event,
+      resizerPosition,
+    });
   };
 }

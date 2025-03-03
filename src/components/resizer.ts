@@ -1,6 +1,7 @@
 import { EventEmitter } from '../event-emitter/event-emitter';
-import { EVENTS } from '../event-emitter/events';
-import { ItemSchema } from './window-manager';
+import { Events, ResizerEvent } from '../event-emitter/events';
+import { Component } from '../types';
+import { ItemSchema } from '../types';
 
 export type ResizerPosition =
   | 'left'
@@ -12,7 +13,7 @@ export type ResizerPosition =
   | 'bottom-left'
   | 'bottom-right';
 
-export class Resizer extends EventEmitter {
+export class Resizer extends EventEmitter<ResizerEvent> implements Component {
   private schema: ItemSchema;
   private root: HTMLElement;
   private position: ResizerPosition | null = null;
@@ -116,7 +117,7 @@ export class Resizer extends EventEmitter {
   private onMouseDown = (event: MouseEvent, position: ResizerPosition) => {
     if (!this.isAvailable || event.button !== 0) return;
     this.position = position;
-    this.emit(EVENTS.RESIZE_START, {
+    this.emit(Events.ResizeStart, {
       event,
       resizerPosition: this.position,
     });
@@ -126,12 +127,12 @@ export class Resizer extends EventEmitter {
 
   private onMouseMove = (event: MouseEvent) => {
     if (!this.isAvailable) return;
-    this.emit(EVENTS.RESIZE, { event, resizerPosition: this.position });
+    this.emit(Events.Resize, { event, resizerPosition: this.position });
   };
 
   private onMouseUp = (event: MouseEvent) => {
     if (!this.isAvailable) return;
-    this.emit(EVENTS.RESIZE_END, { event, resizerPosition: this.position });
+    this.emit(Events.ResizeEnd, { event, resizerPosition: this.position });
     this.position = null;
     document.removeEventListener('mousemove', this.onMouseMove);
     document.removeEventListener('mouseup', this.onMouseUp);
