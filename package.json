@@ -1,0 +1,29 @@
+{
+  "name": "window-manager",
+  "version": "0.1.0",
+  "main": "dist/window-manager.es.js",
+  "types": "dist/window-manager.d.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "typescript",
+    "window-manager",
+    "layout-manager",
+    "window",
+    "layout",
+    "manager"
+  ],
+  "author": "Andrey Shaurov",
+  "license": "MIT",
+  "description": "Library for organizing draggable and resizable windows in a web application",
+  "devDependencies": {
+    "prettier": "^3.5.2",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0",
+    "vite-plugin-dts": "^4.5.1"
+  }
+}

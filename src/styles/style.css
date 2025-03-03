@@ -1,0 +1,198 @@
+.wm-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    box-sizing: border-box;
+    position: relative;
+    background: #000000;
+}
+
+.wm-container * {
+    box-sizing: border-box;
+}
+
+.wm-container-snap-preview::before {
+    position: absolute;
+    content: "";
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 0 2px white;
+    border-radius: 6px;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.wm-container-snap-preview--right::before {  
+    width: 50%;
+    height: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0;
+}
+
+.wm-container-snap-preview--left::before {  
+    width: 50%;
+    height: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0;
+}
+
+.wm-container-snap-preview--top-right::before {
+    width: 50%;
+    height: 50%;
+    top: 0;
+    left: 50%;
+}
+
+.wm-container-snap-preview--top-left::before {
+    width: 50%;
+    height: 50%;
+    top: 0;
+    left: 0;
+}
+
+.wm-container-snap-preview--bottom-right::before {
+    width: 50%;
+    height: 50%;
+    top: 50%;
+    left: 50%;
+}
+
+.wm-container-snap-preview--bottom-left::before {
+    width: 50%;
+    height: 50%;
+    top: 50%;
+    left: 0;
+}
+
+.wm-window {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #778899;
+    background: #2f2f2f;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.wm-column {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+.wm-row {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.wm-window-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px;
+    height: 24px;
+    border-bottom: 1px solid #778899;
+    background: #778899;
+    user-select: none;
+    color: #f0f8ff;
+    font-family: system-ui;
+    font-size: 14px;
+}
+
+.wm-window-resizer {
+    position: absolute;
+    background: transparent;
+}
+
+.wm-window-resizer--left {
+    width: 4px;
+    height: 100%;
+    top: 0;
+    left: 0;
+    cursor: ew-resize;
+}
+
+.wm-window-resizer--right {
+    width: 4px;
+    height: 100%;
+    top: 0;
+    right: 0;
+    cursor: ew-resize;
+}
+
+.wm-window-resizer--top {
+    width: 100%;
+    height: 4px;
+    top: 0;
+    left: 0;
+    cursor: ns-resize;
+}
+
+.wm-window-resizer--bottom {
+    width: 100%;
+    height: 4px;
+    bottom: 0;
+    left: 0;
+    cursor: ns-resize;
+}
+
+.wm-window-controls {
+    display: flex;
+    margin-left: auto;
+}
+
+.wm-window-resizer--top-left {
+    width: 4px;
+    height: 4px;
+    top: 0;
+    left: 0;
+    cursor: nwse-resize;
+}
+
+.wm-window-resizer--top-right {
+    width: 4px;
+    height: 4px;
+    top: 0;
+    right: 0;
+    cursor: nesw-resize;
+}
+
+.wm-window-resizer--bottom-left {
+    width: 4px;
+    height: 4px;
+    bottom: 0;
+    left: 0;
+    cursor: nesw-resize;
+}
+
+.wm-window-resizer--bottom-right {
+    width: 4px;
+    height: 4px;
+    bottom: 0;
+    right: 0;
+    cursor: nwse-resize;
+}
+
+.wm-window-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.wm-window-button:hover {
+    opacity: 0.5;
+}
+
+.wm-window-content {
+    width: 100%;
+    height: 100%;
+}
