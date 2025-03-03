@@ -1,5 +1,4 @@
 import { WindowBounds } from '../components/window';
-import { PresetBound } from './preset-bounds-processor';
 import { BoundsProcessor } from './types';
 
 export type DragBoundsProcessorOptions = {
@@ -22,7 +21,7 @@ export class DragBoundsProcessor implements BoundsProcessor {
   }
 
   getBounds(event: MouseEvent, bounds: WindowBounds): { bounds: WindowBounds } {
-    let { width, height, left, top } = bounds;
+    let { left, top } = bounds;
 
     left =
       ((this.element.offsetLeft + event.movementX) * 100) /
@@ -32,7 +31,7 @@ export class DragBoundsProcessor implements BoundsProcessor {
       this.root.offsetHeight;
 
     return {
-      bounds: { width, height, left, top },
+      bounds: { width: bounds.width, height: bounds.height, left, top },
     };
   }
 }

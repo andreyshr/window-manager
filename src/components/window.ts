@@ -182,7 +182,7 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
 
   private onDragEnd = ({ event }: { event: MouseEvent }) => {
     if (this.snap) {
-      let { bounds } = this.presetBoundsProcessor.getBounds(this.snap);
+      const { bounds } = this.presetBoundsProcessor.getBounds(this.snap);
 
       this.setBounds(bounds);
       this.updateElementBounds(this.bounds);

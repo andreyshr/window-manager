@@ -52,7 +52,7 @@ export class ResizeBoundsProcessor implements BoundsProcessor {
         height += (event.movementY * 100) / this.root.offsetHeight;
         break;
       default:
-        const _exhaustiveCheck: never = resizerPosition;
+        resizerPosition satisfies never;
         throw new Error('Unhandled resizer position type');
     }
 

@@ -1,5 +1,5 @@
 export class EventEmitter<
-  TEventMap extends Record<string, any> = Record<string, any>,
+  TEventMap extends Record<string, unknown> = Record<string, unknown>,
 > {
   private events: {
     [K in keyof TEventMap]?: Array<(data: TEventMap[K]) => void>;
