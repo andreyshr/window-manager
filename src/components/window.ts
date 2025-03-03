@@ -1,7 +1,6 @@
 import { ResizerPosition, Resizer } from './resizer';
 import { EventEmitter } from '../event-emitter/event-emitter';
 import { Events, WindowEvent } from '../event-emitter/events';
-import { ItemSchema } from '../types';
 import { Header } from './header/header';
 import { uuid } from '../utils';
 import { ResizeBoundsProcessor } from '../processors/resize-bounds-processor';
@@ -12,12 +11,16 @@ import {
 } from '../processors/preset-bounds-processor';
 import { SnapProcessor } from '../processors/snap-processor';
 import { Snap } from '../processors/types';
-import { Component } from '../types';
+import { Component, ContentCtor } from '../types';
 
 export type WindowOptions = {
   snapThreshold: number;
   minWindowWidth: number;
   minWindowHeight: number;
+  bounds: WindowBounds;
+  title: string;
+  isClosable: boolean;
+  ctor: ContentCtor;
 };
 
 export type WindowBounds = {
@@ -28,12 +31,8 @@ export type WindowBounds = {
 };
 
 export class Window extends EventEmitter<WindowEvent> implements Component {
-  private schema: ItemSchema;
-  private root: HTMLElement;
   private element: HTMLElement;
   private bounds: WindowBounds;
-  private index: number;
-  private options: WindowOptions;
   private header: Header;
   private resizer: Resizer;
   private resizeBoundsProcessor: ResizeBoundsProcessor;
@@ -46,22 +45,17 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   private uid = uuid();
 
   constructor(
-    schema: ItemSchema,
-    root: HTMLElement,
-    index: number,
-    options: WindowOptions
+    private root: HTMLElement,
+    private index: number,
+    private options: WindowOptions
   ) {
     super();
-    this.schema = schema;
-    this.root = root;
     this.bounds = {
-      width: schema.width,
-      height: schema.height,
-      left: schema.position[0],
-      top: schema.position[1],
+      width: this.options.bounds.width,
+      height: this.options.bounds.height,
+      left: this.options.bounds.left,
+      top: this.options.bounds.top,
     };
-    this.index = index;
-    this.options = options;
     this.element = this.createElement();
     this.header = this.createHeader();
     this.resizer = this.createResizer();
@@ -75,8 +69,8 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
     this.snapProcessor = new SnapProcessor(this.root, {
       snapThreshold: this.options.snapThreshold,
     });
-    this.minWidth = options.minWindowWidth;
-    this.minHeight = options.minWindowHeight;
+    this.minWidth = this.options.minWindowWidth;
+    this.minHeight = this.options.minWindowHeight;
     this.updateElementBounds(this.bounds);
     this.mount();
   }
@@ -84,7 +78,7 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   private createElement() {
     const element = document.createElement('div');
     element.className = 'wm-window';
-    element.style.zIndex = `${this.index}`;
+    element.style.zIndex = `${this.getZIndex()}`;
     element.addEventListener('mousedown', () => {
       this.emit(Events.SelectWindow, { id: this.uid });
     });
@@ -92,9 +86,12 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   }
 
   private createHeader() {
-    const header = new Header(this.schema, this.element);
+    const header = new Header(this.element, {
+      isClosable: this.options.isClosable,
+      title: this.options.title,
+    });
     header.on(Events.CloseWindow, this.onClose);
-    header.on(Events.Expand, this.onExpand);
+    header.on(Events.ExpandWindow, this.onExpand);
     header.on(Events.DragStart, this.onDragStart);
     header.on(Events.Drag, this.onDrag);
     header.on(Events.DragEnd, this.onDragEnd);
@@ -102,7 +99,7 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   }
 
   private createResizer() {
-    const resizer = new Resizer(this.schema, this.element);
+    const resizer = new Resizer(this.element);
     resizer.on(Events.ResizeStart, this.onResizeStart);
     resizer.on(Events.Resize, this.onResize);
     resizer.on(Events.ResizeEnd, this.onResizeEnd);
@@ -115,11 +112,9 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   }
 
   private mountCtor() {
-    if (this.schema.ctor) {
-      const content = this.schema.ctor(this);
-      content.classList.add('wm-window-content');
-      this.element.insertAdjacentElement('beforeend', content);
-    }
+    const content = this.options.ctor(this);
+    content.classList.add('wm-window-content');
+    this.element.insertAdjacentElement('beforeend', content);
   }
 
   private mountToRoot() {
@@ -247,9 +242,13 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
     });
   };
 
+  private getZIndex() {
+    return this.index + 1;
+  }
+
   setIndex(index: number) {
     this.index = index;
-    this.element.style.zIndex = `${this.index}`;
+    this.element.style.zIndex = `${this.getZIndex()}`;
   }
 
   getUid() {
@@ -265,20 +264,20 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   }
 
   getTitle() {
-    return this.schema.title;
+    return this.options.title;
   }
 
   getIsClosable() {
-    return this.schema.isClosable;
+    return this.options.isClosable;
   }
 
   getCtor() {
-    return this.schema.ctor;
+    return this.options.ctor;
   }
 
   destroy() {
     this.header.off(Events.CloseWindow, this.onClose);
-    this.header.off(Events.Expand, this.onExpand);
+    this.header.off(Events.ExpandWindow, this.onExpand);
     this.header.off(Events.DragStart, this.onDragStart);
     this.header.off(Events.Drag, this.onDrag);
     this.header.off(Events.DragEnd, this.onDragEnd);

@@ -6,9 +6,11 @@ export type ItemSchema = {
   height: number;
   position: [number, number];
   isClosable: boolean;
-  ctor: (window: Window) => HTMLElement;
+  ctor: ContentCtor;
   props?: Record<string, unknown>;
 };
+
+export type ContentCtor = (window: Window) => HTMLElement;
 
 export interface Component {
   getElement: () => HTMLElement;

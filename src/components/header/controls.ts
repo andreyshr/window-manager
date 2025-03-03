@@ -1,9 +1,12 @@
 import { EventEmitter } from '../../event-emitter/event-emitter';
 import { CloseButton } from './close-button';
 import { ExpandButton } from './expand-button';
-import { ItemSchema } from '../../types';
 import { ControlsEvent, Events } from '../../event-emitter/events';
 import { Component } from '../../types';
+
+export interface ControlsOptions {
+  isClosable: boolean;
+}
 
 export class Controls extends EventEmitter<ControlsEvent> implements Component {
   private element: HTMLElement;
@@ -11,15 +14,13 @@ export class Controls extends EventEmitter<ControlsEvent> implements Component {
   private expandButton: ExpandButton;
 
   constructor(
-    private schema: ItemSchema,
-    private root: HTMLElement
+    private root: HTMLElement,
+    private options: ControlsOptions
   ) {
     super();
-    this.schema = schema;
-    this.root = root;
     this.element = this.createElement();
     this.expandButton = this.createExpandButton();
-    if (this.schema.isClosable) {
+    if (this.options.isClosable) {
       this.closeButton = this.createCloseButton();
     }
     this.mount();
@@ -32,14 +33,14 @@ export class Controls extends EventEmitter<ControlsEvent> implements Component {
   }
 
   private createCloseButton() {
-    const closeButton = new CloseButton(this.schema, this.element);
+    const closeButton = new CloseButton(this.element);
     closeButton.on(Events.CloseWindow, this.onClose);
     return closeButton;
   }
 
   private createExpandButton() {
-    const expandButton = new ExpandButton(this.schema, this.element);
-    expandButton.on(Events.Expand, this.onExpand);
+    const expandButton = new ExpandButton(this.element);
+    expandButton.on(Events.ExpandWindow, this.onExpand);
     return expandButton;
   }
 
@@ -52,7 +53,7 @@ export class Controls extends EventEmitter<ControlsEvent> implements Component {
   };
 
   private onExpand = ({ isMaximized }: { isMaximized: boolean }) => {
-    this.emit(Events.Expand, { isMaximized });
+    this.emit(Events.ExpandWindow, { isMaximized });
   };
 
   getElement() {
@@ -61,7 +62,7 @@ export class Controls extends EventEmitter<ControlsEvent> implements Component {
 
   destroy() {
     this.closeButton?.off(Events.CloseWindow, this.onClose);
-    this.expandButton.off(Events.Expand, this.onExpand);
+    this.expandButton.off(Events.ExpandWindow, this.onExpand);
     this.closeButton?.destroy();
     this.expandButton.destroy();
   }

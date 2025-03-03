@@ -1,7 +1,6 @@
 import { EventEmitter } from '../event-emitter/event-emitter';
 import { Events, ResizerEvent } from '../event-emitter/events';
 import { Component } from '../types';
-import { ItemSchema } from '../types';
 
 export type ResizerPosition =
   | 'left'
@@ -14,8 +13,6 @@ export type ResizerPosition =
   | 'bottom-right';
 
 export class Resizer extends EventEmitter<ResizerEvent> implements Component {
-  private schema: ItemSchema;
-  private root: HTMLElement;
   private position: ResizerPosition | null = null;
   private leftResizer: HTMLElement;
   private rightResizer: HTMLElement;
@@ -27,10 +24,8 @@ export class Resizer extends EventEmitter<ResizerEvent> implements Component {
   private bottomResizer: HTMLElement;
   private isAvailable = true;
 
-  constructor(schema: ItemSchema, root: HTMLElement) {
+  constructor(private root: HTMLElement) {
     super();
-    this.schema = schema;
-    this.root = root;
     this.leftResizer = this.createLeftResizerElement();
     this.rightResizer = this.createRightResizerElement();
     this.topResizer = this.createTopResizerElement();

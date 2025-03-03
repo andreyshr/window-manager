@@ -1,20 +1,23 @@
 import { EventEmitter } from '../../event-emitter/event-emitter';
 import { Events, HeaderEvent } from '../../event-emitter/events';
 import { Controls } from './controls';
-import { ItemSchema } from '../../types';
 import { Component } from '../../types';
 
+export interface HeaderOptions {
+  title: string;
+  isClosable: boolean;
+}
+
 export class Header extends EventEmitter<HeaderEvent> implements Component {
-  private schema: ItemSchema;
-  private root: HTMLElement;
   private element: HTMLElement;
   private controls: Controls;
   private isAvailable = true;
 
-  constructor(schema: ItemSchema, root: HTMLElement) {
+  constructor(
+    private root: HTMLElement,
+    private options: HeaderOptions
+  ) {
     super();
-    this.schema = schema;
-    this.root = root;
     this.element = this.createElement();
     this.controls = this.createControls();
     this.mount();
@@ -23,15 +26,17 @@ export class Header extends EventEmitter<HeaderEvent> implements Component {
   private createElement() {
     const element = document.createElement('div');
     element.className = 'wm-window-header';
-    element.innerHTML = `<span class="wm-window-title">${this.schema.title}</span>`;
+    element.innerHTML = `<span class="wm-window-title">${this.options.title}</span>`;
     element.addEventListener('mousedown', this.onMouseDown);
     return element;
   }
 
   private createControls() {
-    const controls = new Controls(this.schema, this.element);
+    const controls = new Controls(this.element, {
+      isClosable: this.options.isClosable,
+    });
     controls.on(Events.CloseWindow, this.onClose);
-    controls.on(Events.Expand, this.onExpand);
+    controls.on(Events.ExpandWindow, this.onExpand);
     return controls;
   }
 
@@ -44,7 +49,7 @@ export class Header extends EventEmitter<HeaderEvent> implements Component {
   };
 
   private onExpand = ({ isMaximized }: { isMaximized: boolean }) => {
-    this.emit(Events.Expand, { isMaximized });
+    this.emit(Events.ExpandWindow, { isMaximized });
   };
 
   private onMouseDown = (event: MouseEvent) => {
@@ -76,7 +81,7 @@ export class Header extends EventEmitter<HeaderEvent> implements Component {
 
   destroy() {
     this.controls.off(Events.CloseWindow, this.onClose);
-    this.controls.off(Events.Expand, this.onExpand);
+    this.controls.off(Events.ExpandWindow, this.onExpand);
     this.controls.destroy();
   }
 }

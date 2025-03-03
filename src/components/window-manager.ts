@@ -6,7 +6,7 @@ import {
 } from '../constants';
 import { EventEmitter } from '../event-emitter/event-emitter';
 import { Events, WindowManagerEvent } from '../event-emitter/events';
-import { Window } from './window';
+import { Window, WindowOptions } from './window';
 import { Snap } from '../processors/types';
 import { ResizerPosition } from './resizer';
 import { ItemSchema } from '../types';
@@ -20,18 +20,16 @@ export type WindowManagerOptions = {
 export type ResolvedWindowManagerOptions = Required<WindowManagerOptions>;
 
 export class WindowManager extends EventEmitter<WindowManagerEvent> {
-  private root: HTMLElement;
   private options: ResolvedWindowManagerOptions;
   private element: HTMLElement;
   private content: Window[] = [];
 
   constructor(
-    root: HTMLElement,
+    private root: HTMLElement,
     schema: ItemSchema[],
     options?: WindowManagerOptions
   ) {
     super();
-    this.root = root;
     this.options = this.mapOptions(options);
     this.element = this.createElement();
     this.content = this.schemaToContent(schema);
@@ -39,11 +37,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
   }
 
   addWindow(schema: ItemSchema) {
-    const window = this.createWindow(
-      schema,
-      this.element,
-      this.content.length <= 0 ? 0 : this.content.length + 1
-    );
+    const window = this.createWindow(schema);
     this.content.push(window);
   }
 
@@ -139,17 +133,36 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
   }
 
   private schemaToContent(schema: ItemSchema[]) {
-    return schema.map((item, index) =>
-      this.createWindow(item, this.element, index)
-    );
+    return schema.map((item, index) => this.createWindow(item, index));
   }
 
   private mount() {
     this.root.insertAdjacentElement('beforeend', this.element);
   }
 
-  private createWindow(schema: ItemSchema, root: HTMLElement, index: number) {
-    const window = new Window(schema, root, index, this.options);
+  private createWindowOptions(schema: ItemSchema): WindowOptions {
+    return {
+      ...this.options,
+      title: schema.title,
+      isClosable: schema.isClosable,
+      bounds: {
+        width: schema.width,
+        height: schema.height,
+        left: schema.position[0],
+        top: schema.position[1],
+      },
+      ctor: schema.ctor,
+    };
+  }
+
+  private createWindow(schema: ItemSchema, _index?: number) {
+    const index = _index
+      ? _index
+      : this.content.length <= 0
+        ? 0
+        : this.content.length + 1;
+    const options = this.createWindowOptions(schema);
+    const window = new Window(this.element, index, options);
     this.setListeners(window);
     return window;
   }

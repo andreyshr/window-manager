@@ -2,9 +2,9 @@ import { ResizerPosition } from '../components/resizer';
 import { Snap } from '../processors/types';
 
 export const enum Events {
-  CloseWindow = 'deleteWindow',
+  CloseWindow = 'closeWindow',
   SelectWindow = 'selectWindow',
-  Expand = 'expand',
+  ExpandWindow = 'expand',
   DragStart = 'dragStart',
   Drag = 'drag',
   DragEnd = 'dragEnd',
@@ -18,17 +18,17 @@ export type CloseButtonEvent = {
 };
 
 export type ExpandButtonEvent = {
-  [Events.Expand]: { isMaximized: boolean };
+  [Events.ExpandWindow]: { isMaximized: boolean };
 };
 
 export type ControlsEvent = {
   [Events.CloseWindow]: undefined;
-  [Events.Expand]: { isMaximized: boolean };
+  [Events.ExpandWindow]: { isMaximized: boolean };
 };
 
 export type HeaderEvent = {
   [Events.CloseWindow]: undefined;
-  [Events.Expand]: { isMaximized: boolean };
+  [Events.ExpandWindow]: { isMaximized: boolean };
   [Events.DragStart]: { event: MouseEvent };
   [Events.Drag]: { event: MouseEvent };
   [Events.DragEnd]: { event: MouseEvent };
@@ -49,7 +49,7 @@ export type ResizerEvent = {
 export type WindowEvent = {
   [Events.CloseWindow]: { id: string };
   [Events.SelectWindow]: { id: string };
-  [Events.Expand]: { isMaximized: boolean };
+  [Events.ExpandWindow]: { isMaximized: boolean };
   [Events.DragStart]: { event: MouseEvent };
   [Events.Drag]: { event: MouseEvent; snap: Snap | undefined };
   [Events.DragEnd]: { event: MouseEvent };
@@ -67,7 +67,7 @@ export type WindowEvent = {
 export type WindowManagerEvent = {
   [Events.CloseWindow]: { id: string };
   [Events.SelectWindow]: { id: string };
-  [Events.Expand]: { isMaximized: boolean };
+  [Events.ExpandWindow]: { isMaximized: boolean };
   [Events.DragStart]: { event: MouseEvent };
   [Events.Drag]: { event: MouseEvent; snap: Snap | undefined };
   [Events.DragEnd]: { event: MouseEvent };
