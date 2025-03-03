@@ -23,7 +23,7 @@ export class Header extends EventEmitter<HeaderEvent> implements Component {
   private createElement() {
     const element = document.createElement('div');
     element.className = 'wm-window-header';
-    element.innerHTML = this.schema.title;
+    element.innerHTML = `<span class="wm-window-title">${this.schema.title}</span>`;
     element.addEventListener('mousedown', this.onMouseDown);
     return element;
   }
