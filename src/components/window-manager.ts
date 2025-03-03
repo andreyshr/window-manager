@@ -11,24 +11,24 @@ import { Snap } from '../processors/types';
 import { ResizerPosition } from './resizer';
 import { ItemSchema } from '../types';
 
-export type WindowManagerCtorOptions = {
+export type WindowManagerOptions = {
   snapThreshold?: number;
   minWindowWidth?: number;
   minWindowHeight?: number;
 };
 
-export type WindowManagerOptions = Required<WindowManagerCtorOptions>;
+export type ResolvedWindowManagerOptions = Required<WindowManagerOptions>;
 
 export class WindowManager extends EventEmitter<WindowManagerEvent> {
   private root: HTMLElement;
-  private options: WindowManagerOptions;
+  private options: ResolvedWindowManagerOptions;
   private element: HTMLElement;
   private content: Window[] = [];
 
   constructor(
     root: HTMLElement,
     schema: ItemSchema[],
-    options?: WindowManagerCtorOptions
+    options?: WindowManagerOptions
   ) {
     super();
     this.root = root;
@@ -52,6 +52,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     if (window) {
       window.destroy();
       this.content = this.content.filter((item) => item.getUid() !== id);
+      this.updateWindowIndexes();
       this.emit(Events.CloseWindow, { id });
     }
   }
@@ -61,9 +62,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     if (index !== -1) {
       this.content.push(this.content.splice(index, 1)[0]);
     }
-    this.content.forEach((item, index) => {
-      item.setIndex(index);
-    });
+    this.updateWindowIndexes();
     this.emit(Events.SelectWindow, { id });
   }
 
@@ -72,9 +71,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     if (index !== -1) {
       this.content.unshift(this.content.splice(index, 1)[0]);
     }
-    this.content.forEach((item, index) => {
-      item.setIndex(index);
-    });
+    this.updateWindowIndexes();
     this.emit(Events.SelectWindow, { id });
   }
 
@@ -97,7 +94,9 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     this.root.removeChild(this.element);
   }
 
-  private mapOptions(options?: WindowManagerCtorOptions): WindowManagerOptions {
+  private mapOptions(
+    options?: WindowManagerOptions
+  ): ResolvedWindowManagerOptions {
     return {
       snapThreshold: options?.snapThreshold ?? SNAP_THRESHOLD,
       minWindowWidth: options?.minWindowWidth ?? MIN_WINDOW_WIDTH,
@@ -153,6 +152,12 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     const window = new Window(schema, root, index, this.options);
     this.setListeners(window);
     return window;
+  }
+
+  private updateWindowIndexes() {
+    this.content.forEach((item, index) => {
+      item.setIndex(index);
+    });
   }
 
   private setListeners(window: Window) {
