@@ -27,6 +27,15 @@ Import and initialize the **WindowManager**:
 import { WindowManager } from 'window-manager';
 
 const root = document.querySelector('#wm-container');
-const schema = [];
+const schema = [
+  {
+    title: 'My window',
+    width: 50,
+    height: 50,
+    position: [20, 20],
+    isClosable: true,
+    ctor: () => document.createElement('div'),
+  },
+];
 const wm = new WindowManager(root, schema);
 ```
