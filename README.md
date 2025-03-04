@@ -87,7 +87,9 @@ const wm = new WindowManager(root, schema);
 
 wm.registerConstructor('myWindow', (window, container, schema) => {
   const element = document.createElement('div');
-  if (typeof schema.props?.myProp === 'string') = schema.props.myProp;
+  if (typeof schema.props?.myProp === 'string') {
+    element.innerText = schema.props.myProp;
+  }
   container.appendChild(element);
 });
 
