@@ -204,7 +204,7 @@
 }
 
 .wm-window-resizer--bottom-right {
-    width: 4var(--wm-resizer-size);
+    width: var(--wm-resizer-size);
     height: var(--wm-resizer-size);
     bottom: 0;
     right: 0;
