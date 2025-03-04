@@ -7,7 +7,7 @@ import { DomEventDelegator } from '../dom-event-delegator/dom-event-delegator';
 import { EventEmitter } from '../event-emitter/event-emitter';
 import { Events, WindowManagerEvent } from '../event-emitter/events';
 import { Snap } from '../processors/types';
-import { WindowSchema } from '../types';
+import { ContentCtor, WindowSchema } from '../types';
 import { ResizerPosition } from './resizer';
 import { Window, WindowOptions } from './window';
 
@@ -24,10 +24,11 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
   private element: HTMLElement;
   private content: Window[] = [];
   private domEventDelegator: DomEventDelegator;
+  private ctors: Record<string, ContentCtor> = {};
 
   constructor(
     private root: HTMLElement,
-    schema: WindowSchema[] = [],
+    private schema: WindowSchema[] = [],
     options?: WindowManagerOptions
   ) {
     super();
@@ -35,8 +36,18 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     this.options = this.mapOptions(options);
     this.element = this.createElement();
     this.domEventDelegator = new DomEventDelegator(this.element);
-    this.content = this.schemaToContent(schema);
+  }
+
+  init() {
+    this.content = this.schemaToContent(this.schema);
     this.mount();
+  }
+
+  registerConstructor(name: string, ctor: ContentCtor) {
+    if (name in this.ctors)
+      throw new Error(`Constructor for ${name} is already registered`);
+
+    this.ctors[name] = ctor;
   }
 
   addWindow(schema: WindowSchema) {
@@ -75,6 +86,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
   toJson(): WindowSchema[] {
     return this.content.map((item) => ({
       title: item.getTitle(),
+      name: item.getName(),
       width: item.getBounds().width,
       height: item.getBounds().height,
       position: [item.getBounds().left, item.getBounds().top],
@@ -126,9 +138,14 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
   }
 
   private createWindowOptions(schema: WindowSchema): WindowOptions {
+    const ctor = schema.ctor ?? this.ctors[schema.name];
+
+    if (!ctor) throw new Error(`Constructor for ${schema.name} is not defined`);
+
     return {
       ...this.options,
       title: schema.title,
+      name: schema.name,
       isClosable: schema.isClosable,
       bounds: {
         width: schema.width,
@@ -136,7 +153,8 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
         left: schema.position[0],
         top: schema.position[1],
       },
-      ctor: schema.ctor,
+      ctor,
+      schema,
     };
   }
 

@@ -127,6 +127,7 @@
     cursor: default;
     font-family: var(--wm-font-family);
     font-size: var(--wm-font-size);
+    cursor: move;
 }
 
 .wm-window-title {

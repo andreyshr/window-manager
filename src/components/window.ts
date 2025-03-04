@@ -6,7 +6,7 @@ import { PresetBound, PresetBounds } from '../processors/preset-bounds';
 import { ResizeProcessor } from '../processors/resize-processor';
 import { SnapProcessor } from '../processors/snap-processor';
 import { Snap } from '../processors/types';
-import { Component, ContentCtor } from '../types';
+import { Component, ContentCtor, WindowSchema } from '../types';
 import { uuid } from '../utils';
 import { Header } from './header/header';
 import { Resizer, ResizerPosition } from './resizer';
@@ -17,8 +17,10 @@ export type WindowOptions = {
   minWindowHeight: number;
   bounds: WindowBounds;
   title: string;
+  name: string;
   isClosable: boolean;
   ctor: ContentCtor;
+  schema: WindowSchema;
 };
 
 export type WindowBounds = {
@@ -128,7 +130,7 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   }
 
   private async mountCtor() {
-    await this.options.ctor(this, this.container);
+    await this.options.ctor(this, this.container, this.options.schema);
   }
 
   private mountToRoot() {
@@ -285,6 +287,10 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
 
   getCtor() {
     return this.options.ctor;
+  }
+
+  getName() {
+    return this.options.name;
   }
 
   destroy() {
