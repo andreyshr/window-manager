@@ -95,3 +95,45 @@ wm.registerConstructor('myWindow', (window, container, schema) => {
 
 wm.init();
 ```
+
+## 📢 Event Listeners
+
+You can subscribe to the following events for `WindowManager` and `WmWindow` to handle user interactions dynamically.
+
+### 🏠 Window Events
+
+- **`window:close`** – Triggered when a window is closed.
+- **`window:select`** – Fired when a window is selected.
+- **`window:expand`** – Emitted when a window is expanded.
+
+### 🎯 Drag Events
+
+- **`drag:start`** – Fires when dragging starts.
+- **`drag`** – Continuously emitted while dragging.
+- **`drag:end`** – Fires when dragging ends.
+
+### 📏 Resize Events
+
+- **`resize:start`** – Fires when resizing starts.
+- **`resize`** – Continuously emitted while resizing.
+- **`resize:end`** – Fires when resizing ends.
+
+### 📌 Usage Example
+
+To listen for an event, use:
+
+```ts
+wm.on(Events.DragStart, (event) => {
+  console.log('Dragging started:', event);
+});
+
+// OR
+
+wm.registerConstructor('myWindow', (window, container, schema) => {
+  const element = document.createElement('div');
+  window.on(Events.DragStart, (event) => {
+    console.log('Dragging started:', event);
+  });
+  container.appendChild(element);
+});
+```
