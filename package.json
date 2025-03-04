@@ -1,5 +1,5 @@
 {
-  "name": "window-manager",
+  "name": "window-mancer",
   "version": "0.1.0",
   "type": "module",
   "files": [
@@ -37,11 +37,20 @@
     "layout-manager",
     "window",
     "layout",
-    "manager"
+    "manager",
+    "drag",
+    "resize"
   ],
   "author": "andr_w",
   "license": "MIT",
   "description": "Library for organizing draggable and resizable windows in a web application",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andreyshr/window-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/andreyshr/window-manager/issues"
+  },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
