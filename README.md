@@ -21,21 +21,23 @@ yarn add window-manager
 
 ### 1️⃣ Basic Setup
 
-Import and initialize the **WindowManager**:
+Create **root** element:
 
 ```html
 <div id="wm"></div>
 ```
 
+Import and initialize the **WindowManager**:
+
 ```ts
 import { WindowManager } from 'window-manager';
-import 'window-manager/dist/styles.css';
+import 'window-manager/style.css';
 
-const root = document.querySelector('#wm');
+const root = document.querySelector('#wm') as HTMLElement;
 const schema = [
   {
     title: 'My window',
-    name: 'myWindow'
+    name: 'myWindow',
     width: 50,
     height: 50,
     position: [20, 20],
@@ -54,26 +56,30 @@ wm.init();
 
 ### 2️⃣ Advanced Setup
 
+Create **root** element:
+
 ```html
 <div id="wm"></div>
 ```
 
+Import and initialize the **WindowManager**:
+
 ```ts
 import { WindowManager } from 'window-manager';
-import 'window-manager/dist/styles.css';
+import 'window-manager/style.css';
 
-const root = document.querySelector('#wm');
+const root = document.querySelector('#wm') as HTMLElement;
 const schema = [
   {
     title: 'My window',
-    name: 'myWindow'
+    name: 'myWindow',
     width: 50,
     height: 50,
     position: [20, 20],
     isClosable: true,
     props: {
-      myProp: 'My first window'
-    }
+      myProp: 'My first window',
+    },
   },
 ];
 
@@ -81,7 +87,7 @@ const wm = new WindowManager(root, schema);
 
 wm.registerConstructor('myWindow', (window, container, schema) => {
   const element = document.createElement('div');
-  element.innerText = schema.props?.myProp ?? ''
+  if (typeof schema.props?.myProp === 'string') = schema.props.myProp;
   container.appendChild(element);
 });
 

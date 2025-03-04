@@ -13,7 +13,7 @@ export default defineConfig({
     cssCodeSplit: true,
     rollupOptions: {
       output: {
-        assetFileNames: 'styles.css',
+        assetFileNames: 'style.css',
       },
     },
   },
