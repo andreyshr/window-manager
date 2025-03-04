@@ -25,7 +25,7 @@
     "layout",
     "manager"
   ],
-  "author": "Andrey Shaurov",
+  "author": "andr_w",
   "license": "MIT",
   "description": "Library for organizing draggable and resizable windows in a web application",
   "devDependencies": {
