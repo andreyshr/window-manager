@@ -6,27 +6,17 @@ export type DragBoundsProcessorOptions = {
 };
 
 export class DragBoundsProcessor implements BoundsProcessor {
-  private root: HTMLElement;
-  private element: HTMLElement;
-  private options: DragBoundsProcessorOptions;
-
   constructor(
-    root: HTMLElement,
-    element: HTMLElement,
-    options: DragBoundsProcessorOptions
-  ) {
-    this.root = root;
-    this.element = element;
-    this.options = options;
-  }
+    private root: HTMLElement,
+    private element: HTMLElement,
+    private options: DragBoundsProcessorOptions
+  ) {}
 
   getBounds(event: MouseEvent, bounds: WindowBounds): { bounds: WindowBounds } {
-    let { left, top } = bounds;
-
-    left =
+    const left =
       ((this.element.offsetLeft + event.movementX) * 100) /
       this.root.offsetWidth;
-    top =
+    const top =
       ((this.element.offsetTop + event.movementY) * 100) /
       this.root.offsetHeight;
 

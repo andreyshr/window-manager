@@ -1,11 +1,39 @@
 .wm-container {
+    /* Common colors */
+    --wm-background-color: #000000;
+    --wm-border-color: #778899;
+    --wm-header-background: #778899;
+    --wm-header-title-color: #f0f8ff;
+    --wm-window-background: #2f2f2f;
+    --wm-snap-preview-background: rgba(255, 255, 255, 0.05);
+    --wm-resizer-background: transparent;
+    --wm-window-title-max-width: 30%;
+    
+    /* Geometry */
+    --wm-window-border-radius: 6px;
+    --wm-resizer-size: 4px;
+    --wm-window-header-height: 24px;
+    --wm-window-padding: 4px;
+    --wm-snap-preview-border-width: 2px;
+    
+    /* Fonts */
+    --wm-font-family: system-ui;
+    --wm-font-size: 14px;
+    
+    /* Effects */
+    --wm-snap-preview-box-shadow: inset 0 0 0 var(--wm-snap-preview-border-width) #ffffff;
+    --wm-window-button-opacity-hover: 0.5;
+  }
+
+.wm-container {
     width: 100%;
     height: 100%;
+    flex-grow: 1;
     overflow: hidden;
     display: flex;
     box-sizing: border-box;
     position: relative;
-    background: #000000;
+    background: var(--wm-background-color);
 }
 
 .wm-container * {
@@ -15,9 +43,9 @@
 .wm-container-snap-preview::before {
     position: absolute;
     content: "";
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: inset 0 0 0 2px white;
-    border-radius: 6px;
+    background: var(--wm-snap-preview-background);
+    box-shadow: var(--wm-snap-preview-box-shadow);
+    border-radius: var(--wm-window-border-radius);
     z-index: 1000;
     pointer-events: none;
 }
@@ -70,11 +98,9 @@
     display: flex;
     flex-direction: column;
     position: absolute;
-    width: 100%;
-    height: 100%;
-    border: 1px solid #778899;
-    background: #2f2f2f;
-    border-radius: 6px;
+    border: 1px solid var(--wm-border-color);
+    background: var(--wm-window-background);
+    border-radius: var(--wm-window-border-radius);
     overflow: hidden;
 }
 
@@ -96,11 +122,10 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 4px;
-    height: 24px;
-    border-bottom: 1px solid #778899;
-    background: #778899;
+    height: var(--wm-window-header-height);
+    background: var(--wm-header-background);
     user-select: none;
-    color: #f0f8ff;
+    cursor: default;
     font-family: system-ui;
     font-size: 14px;
 }
@@ -110,6 +135,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: var(--wm-header-title-color);
 }
 
 .wm-window-resizer {
@@ -193,6 +219,14 @@
     background: transparent;
     border: none;
     cursor: pointer;
+    padding: 0 4px;
+    margin: 0;
+    outline: none;
+}
+
+.wm-window-button:focus,
+.wm-window-button:focus-visible {
+    outline: none;
 }
 
 .wm-window-button:hover {
@@ -201,5 +235,5 @@
 
 .wm-window-content {
     width: 100%;
-    height: 100%;
+    flex-grow: 1;
 }
