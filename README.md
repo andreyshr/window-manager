@@ -22,10 +22,15 @@ yarn add window-manager
 
 Import and initialize the **WindowManager**:
 
+```html
+<div id="wm"></div>
+```
+
 ```ts
 import { WindowManager } from 'window-manager';
+import 'window-manager/dist/styles.css';
 
-const root = document.querySelector('#wm-container');
+const root = document.querySelector('#wm');
 const schema = [
   {
     title: 'My window',
