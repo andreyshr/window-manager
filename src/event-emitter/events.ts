@@ -1,17 +1,17 @@
 import { ResizerPosition } from '../components/resizer';
 import { Snap } from '../processors/types';
 
-export const enum Events {
-  CloseWindow = 'closeWindow',
-  SelectWindow = 'selectWindow',
-  ExpandWindow = 'expand',
-  DragStart = 'dragStart',
-  Drag = 'drag',
-  DragEnd = 'dragEnd',
-  ResizeStart = 'resizeStart',
-  Resize = 'resize',
-  ResizeEnd = 'resizeEnd',
-}
+export const Events = {
+  CloseWindow: 'window:close',
+  SelectWindow: 'window:select',
+  ExpandWindow: 'window:expand',
+  DragStart: 'drag:start',
+  Drag: 'drag',
+  DragEnd: 'drag:end',
+  ResizeStart: 'resize:start',
+  Resize: 'resize',
+  ResizeEnd: 'resize:end',
+} as const;
 
 export type CloseButtonEvent = {
   [Events.CloseWindow]: undefined;
