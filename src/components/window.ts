@@ -30,7 +30,7 @@ export type WindowBounds = {
   top: number;
 };
 
-export class Window extends EventEmitter<WindowEvent> implements Component {
+export class WmWindow extends EventEmitter<WindowEvent> implements Component {
   private element: HTMLElement;
   private container: HTMLElement;
   private bounds: WindowBounds;
@@ -103,8 +103,8 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
       },
       this.domEventDelegator
     );
-    header.on(Events.CloseWindow, this.onClose);
-    header.on(Events.ExpandWindow, this.onExpand);
+    header.on(Events.CloseWindow, this.onCloseWindow);
+    header.on(Events.ExpandWindow, this.onExpandWindow);
     header.on(Events.DragStart, this.onDragStart);
     header.on(Events.Drag, this.onDrag);
     header.on(Events.DragEnd, this.onDragEnd);
@@ -165,13 +165,14 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
     this.updateElementBounds(bounds);
   }
 
-  private onClose = () => {
+  private onCloseWindow = () => {
     this.emit(Events.CloseWindow, { id: this.uid });
   };
 
-  private onExpand = ({ isMaximized }: { isMaximized: boolean }) => {
+  private onExpandWindow = ({ isMaximized }: { isMaximized: boolean }) => {
     if (isMaximized) this.handleMaximized();
     else this.handleMinimized();
+    this.emit(Events.ExpandWindow, { isMaximized });
   };
 
   private onDragStart = ({ event }: { event: MouseEvent }) => {
@@ -295,8 +296,8 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
 
   destroy() {
     this.domEventDelegator.off(this.element, 'mousedown');
-    this.header.off(Events.CloseWindow, this.onClose);
-    this.header.off(Events.ExpandWindow, this.onExpand);
+    this.header.off(Events.CloseWindow, this.onCloseWindow);
+    this.header.off(Events.ExpandWindow, this.onExpandWindow);
     this.header.off(Events.DragStart, this.onDragStart);
     this.header.off(Events.Drag, this.onDrag);
     this.header.off(Events.DragEnd, this.onDragEnd);

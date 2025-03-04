@@ -1,4 +1,4 @@
-import { Window } from './components/window';
+import { WmWindow } from './components/window';
 
 export type WindowSchema = {
   title: string;
@@ -12,7 +12,7 @@ export type WindowSchema = {
 };
 
 export type ContentCtor = (
-  window: Window,
+  window: WmWindow,
   container: HTMLElement,
   schema: WindowSchema
 ) => Promise<void> | void;

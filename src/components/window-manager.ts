@@ -9,7 +9,7 @@ import { Events, WindowManagerEvent } from '../event-emitter/events';
 import { Snap } from '../processors/types';
 import { ContentCtor, WindowSchema } from '../types';
 import { ResizerPosition } from './resizer';
-import { Window, WindowOptions } from './window';
+import { WmWindow, WindowOptions } from './window';
 
 export type WindowManagerOptions = {
   snapThreshold?: number;
@@ -22,7 +22,7 @@ export type ResolvedWindowManagerOptions = Required<WindowManagerOptions>;
 export class WindowManager extends EventEmitter<WindowManagerEvent> {
   private options: ResolvedWindowManagerOptions;
   private element: HTMLElement;
-  private content: Window[] = [];
+  private content: WmWindow[] = [];
   private domEventDelegator: DomEventDelegator;
   private ctors: Record<string, ContentCtor> = {};
 
@@ -165,7 +165,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
         ? 0
         : this.content.length + 1;
     const options = this.createWindowOptions(schema);
-    const window = new Window(
+    const window = new WmWindow(
       this.element,
       index,
       options,
@@ -181,9 +181,10 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     });
   }
 
-  private setListeners(window: Window) {
-    window.on(Events.CloseWindow, this.onClose);
+  private setListeners(window: WmWindow) {
+    window.on(Events.CloseWindow, this.onCloseWindow);
     window.on(Events.SelectWindow, this.onSelectWindow);
+    window.on(Events.ExpandWindow, this.onExpandWindow);
     window.on(Events.DragStart, this.onDragStart);
     window.on(Events.Drag, this.onDrag);
     window.on(Events.DragEnd, this.onDragEnd);
@@ -192,9 +193,10 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     window.on(Events.ResizeEnd, this.onResizeEnd);
   }
 
-  private removeListeners(window: Window) {
-    window.off(Events.CloseWindow, this.onClose);
+  private removeListeners(window: WmWindow) {
+    window.off(Events.CloseWindow, this.onCloseWindow);
     window.off(Events.SelectWindow, this.onSelectWindow);
+    window.off(Events.ExpandWindow, this.onExpandWindow);
     window.off(Events.DragStart, this.onDragStart);
     window.off(Events.Drag, this.onDrag);
     window.off(Events.DragEnd, this.onDragEnd);
@@ -203,12 +205,16 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     window.off(Events.ResizeEnd, this.onResizeEnd);
   }
 
-  private onClose = ({ id }: { id: string }) => {
+  private onCloseWindow = ({ id }: { id: string }) => {
     this.closeWindow(id);
   };
 
   private onSelectWindow = ({ id }: { id: string }) => {
     this.bringWindowToFront(id);
+  };
+
+  private onExpandWindow = ({ isMaximized }: { isMaximized: boolean }) => {
+    this.emit(Events.ExpandWindow, { isMaximized });
   };
 
   private onDragStart = ({ event }: { event: MouseEvent }) => {
