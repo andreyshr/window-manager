@@ -1,0 +1,33 @@
+# Node.js dependencies
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Build output
+dist/
+*.log
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.iml
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Cache & temp files
+.cache/
+.temp/
+.DS_Store
+Thumbs.db
+coverage/
+
+# Local example
+main.ts
+index.html
