@@ -1,3 +1,4 @@
+import { DomEventDelegator } from '../dom-event-delegator/dom-event-delegator';
 import { EventEmitter } from '../event-emitter/event-emitter';
 import { Events, ResizerEvent } from '../event-emitter/events';
 import { Component } from '../types';
@@ -24,7 +25,10 @@ export class Resizer extends EventEmitter<ResizerEvent> implements Component {
   private bottomResizer: HTMLElement;
   private isAvailable = true;
 
-  constructor(private root: HTMLElement) {
+  constructor(
+    private root: HTMLElement,
+    private domEventDelegator: DomEventDelegator
+  ) {
     super();
     this.leftResizer = this.createLeftResizerElement();
     this.rightResizer = this.createRightResizerElement();
@@ -40,7 +44,7 @@ export class Resizer extends EventEmitter<ResizerEvent> implements Component {
   private createLeftResizerElement() {
     const element = document.createElement('div');
     element.className = 'wm-window-resizer wm-window-resizer--left';
-    element.addEventListener('mousedown', (event) =>
+    this.domEventDelegator.on<MouseEvent>('mousedown', element, (event) =>
       this.onMouseDown(event, 'left')
     );
     return element;
@@ -49,7 +53,7 @@ export class Resizer extends EventEmitter<ResizerEvent> implements Component {
   private createRightResizerElement() {
     const element = document.createElement('div');
     element.className = 'wm-window-resizer wm-window-resizer--right';
-    element.addEventListener('mousedown', (event) =>
+    this.domEventDelegator.on<MouseEvent>('mousedown', element, (event) =>
       this.onMouseDown(event, 'right')
     );
     return element;
@@ -58,7 +62,7 @@ export class Resizer extends EventEmitter<ResizerEvent> implements Component {
   private createTopResizerElement() {
     const element = document.createElement('div');
     element.className = 'wm-window-resizer wm-window-resizer--top';
-    element.addEventListener('mousedown', (event) =>
+    this.domEventDelegator.on<MouseEvent>('mousedown', element, (event) =>
       this.onMouseDown(event, 'top')
     );
     return element;
@@ -67,7 +71,7 @@ export class Resizer extends EventEmitter<ResizerEvent> implements Component {
   private createBottomResizerElement() {
     const element = document.createElement('div');
     element.className = 'wm-window-resizer wm-window-resizer--bottom';
-    element.addEventListener('mousedown', (event) =>
+    this.domEventDelegator.on<MouseEvent>('mousedown', element, (event) =>
       this.onMouseDown(event, 'bottom')
     );
     return element;
@@ -76,7 +80,7 @@ export class Resizer extends EventEmitter<ResizerEvent> implements Component {
   private createTopLeftResizerElement() {
     const element = document.createElement('div');
     element.className = 'wm-window-resizer wm-window-resizer--top-left';
-    element.addEventListener('mousedown', (event) =>
+    this.domEventDelegator.on<MouseEvent>('mousedown', element, (event) =>
       this.onMouseDown(event, 'top-left')
     );
     return element;
@@ -85,7 +89,7 @@ export class Resizer extends EventEmitter<ResizerEvent> implements Component {
   private createTopRightResizerElement() {
     const element = document.createElement('div');
     element.className = 'wm-window-resizer wm-window-resizer--top-right';
-    element.addEventListener('mousedown', (event) =>
+    this.domEventDelegator.on<MouseEvent>('mousedown', element, (event) =>
       this.onMouseDown(event, 'top-right')
     );
     return element;
@@ -94,7 +98,7 @@ export class Resizer extends EventEmitter<ResizerEvent> implements Component {
   private createBottomLeftResizerElement() {
     const element = document.createElement('div');
     element.className = 'wm-window-resizer wm-window-resizer--bottom-left';
-    element.addEventListener('mousedown', (event) =>
+    this.domEventDelegator.on<MouseEvent>('mousedown', element, (event) =>
       this.onMouseDown(event, 'bottom-left')
     );
     return element;
@@ -103,7 +107,7 @@ export class Resizer extends EventEmitter<ResizerEvent> implements Component {
   private createBottomRightResizerElement() {
     const element = document.createElement('div');
     element.className = 'wm-window-resizer wm-window-resizer--bottom-right';
-    element.addEventListener('mousedown', (event) =>
+    this.domEventDelegator.on<MouseEvent>('mousedown', element, (event) =>
       this.onMouseDown(event, 'bottom-right')
     );
     return element;
@@ -156,5 +160,14 @@ export class Resizer extends EventEmitter<ResizerEvent> implements Component {
     this.isAvailable = value;
   }
 
-  destroy() {}
+  destroy() {
+    this.domEventDelegator.off(this.leftResizer, 'mousedown');
+    this.domEventDelegator.off(this.rightResizer, 'mousedown');
+    this.domEventDelegator.off(this.topResizer, 'mousedown');
+    this.domEventDelegator.off(this.bottomResizer, 'mousedown');
+    this.domEventDelegator.off(this.topLeftResizer, 'mousedown');
+    this.domEventDelegator.off(this.topRightResizer, 'mousedown');
+    this.domEventDelegator.off(this.bottomLeftResizer, 'mousedown');
+    this.domEventDelegator.off(this.bottomRightResizer, 'mousedown');
+  }
 }

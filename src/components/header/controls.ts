@@ -3,6 +3,7 @@ import { CloseButton } from './close-button';
 import { ExpandButton } from './expand-button';
 import { ControlsEvent, Events } from '../../event-emitter/events';
 import { Component } from '../../types';
+import { DomEventDelegator } from '../../dom-event-delegator/dom-event-delegator';
 
 export interface ControlsOptions {
   isClosable: boolean;
@@ -15,7 +16,8 @@ export class Controls extends EventEmitter<ControlsEvent> implements Component {
 
   constructor(
     private root: HTMLElement,
-    private options: ControlsOptions
+    private options: ControlsOptions,
+    private domEventDelegator: DomEventDelegator
   ) {
     super();
     this.element = this.createElement();
@@ -33,13 +35,13 @@ export class Controls extends EventEmitter<ControlsEvent> implements Component {
   }
 
   private createCloseButton() {
-    const closeButton = new CloseButton(this.element);
+    const closeButton = new CloseButton(this.element, this.domEventDelegator);
     closeButton.on(Events.CloseWindow, this.onClose);
     return closeButton;
   }
 
   private createExpandButton() {
-    const expandButton = new ExpandButton(this.element);
+    const expandButton = new ExpandButton(this.element, this.domEventDelegator);
     expandButton.on(Events.ExpandWindow, this.onExpand);
     return expandButton;
   }

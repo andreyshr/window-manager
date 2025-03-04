@@ -1,15 +1,15 @@
 import { WindowBounds } from '../components/window';
 import { BoundsProcessor } from './types';
 
-export type DragBoundsProcessorOptions = {
+export type DragProcessorOptions = {
   snapThreshold: number;
 };
 
-export class DragBoundsProcessor implements BoundsProcessor {
+export class DragProcessor implements BoundsProcessor {
   constructor(
     private root: HTMLElement,
     private element: HTMLElement,
-    private options: DragBoundsProcessorOptions
+    private options: DragProcessorOptions
   ) {}
 
   getBounds(event: MouseEvent, bounds: WindowBounds): { bounds: WindowBounds } {

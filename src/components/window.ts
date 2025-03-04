@@ -1,17 +1,15 @@
-import { ResizerPosition, Resizer } from './resizer';
+import { DomEventDelegator } from '../dom-event-delegator/dom-event-delegator';
 import { EventEmitter } from '../event-emitter/event-emitter';
 import { Events, WindowEvent } from '../event-emitter/events';
-import { Header } from './header/header';
-import { uuid } from '../utils';
-import { ResizeBoundsProcessor } from '../processors/resize-bounds-processor';
-import { DragBoundsProcessor } from '../processors/drag-bounds-processor';
-import {
-  PresetBound,
-  PresetBoundsProcessor,
-} from '../processors/preset-bounds-processor';
+import { DragProcessor } from '../processors/drag-processor';
+import { PresetBound, PresetBounds } from '../processors/preset-bounds';
+import { ResizeProcessor } from '../processors/resize-processor';
 import { SnapProcessor } from '../processors/snap-processor';
 import { Snap } from '../processors/types';
 import { Component, ContentCtor } from '../types';
+import { uuid } from '../utils';
+import { Header } from './header/header';
+import { Resizer, ResizerPosition } from './resizer';
 
 export type WindowOptions = {
   snapThreshold: number;
@@ -32,12 +30,13 @@ export type WindowBounds = {
 
 export class Window extends EventEmitter<WindowEvent> implements Component {
   private element: HTMLElement;
+  private container: HTMLElement;
   private bounds: WindowBounds;
   private header: Header;
   private resizer: Resizer;
-  private resizeBoundsProcessor: ResizeBoundsProcessor;
-  private dragBoundsProcessor: DragBoundsProcessor;
-  private presetBoundsProcessor: PresetBoundsProcessor;
+  private presetBounds: PresetBounds;
+  private resizeProcessor: ResizeProcessor;
+  private dragProcessor: DragProcessor;
   private snapProcessor: SnapProcessor;
   private minWidth: number;
   private minHeight: number;
@@ -47,7 +46,8 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   constructor(
     private root: HTMLElement,
     private index: number,
-    private options: WindowOptions
+    private options: WindowOptions,
+    private domEventDelegator: DomEventDelegator
   ) {
     super();
     this.bounds = {
@@ -57,15 +57,16 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
       top: this.options.bounds.top,
     };
     this.element = this.createElement();
+    this.container = this.createContainer();
     this.header = this.createHeader();
     this.resizer = this.createResizer();
-    this.resizeBoundsProcessor = new ResizeBoundsProcessor(this.root);
-    this.dragBoundsProcessor = new DragBoundsProcessor(
+    this.presetBounds = new PresetBounds();
+    this.resizeProcessor = new ResizeProcessor(this.root);
+    this.dragProcessor = new DragProcessor(
       this.root,
       this.element,
       this.options
     );
-    this.presetBoundsProcessor = new PresetBoundsProcessor();
     this.snapProcessor = new SnapProcessor(this.root, {
       snapThreshold: this.options.snapThreshold,
     });
@@ -79,17 +80,27 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
     const element = document.createElement('div');
     element.className = 'wm-window';
     element.style.zIndex = `${this.getZIndex()}`;
-    element.addEventListener('mousedown', () => {
+    this.domEventDelegator.on('mousedown', element, () => {
       this.emit(Events.SelectWindow, { id: this.uid });
     });
     return element;
   }
 
+  private createContainer() {
+    const element = document.createElement('div');
+    element.classList.add('wm-window-content');
+    return element;
+  }
+
   private createHeader() {
-    const header = new Header(this.element, {
-      isClosable: this.options.isClosable,
-      title: this.options.title,
-    });
+    const header = new Header(
+      this.element,
+      {
+        isClosable: this.options.isClosable,
+        title: this.options.title,
+      },
+      this.domEventDelegator
+    );
     header.on(Events.CloseWindow, this.onClose);
     header.on(Events.ExpandWindow, this.onExpand);
     header.on(Events.DragStart, this.onDragStart);
@@ -99,7 +110,7 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   }
 
   private createResizer() {
-    const resizer = new Resizer(this.element);
+    const resizer = new Resizer(this.element, this.domEventDelegator);
     resizer.on(Events.ResizeStart, this.onResizeStart);
     resizer.on(Events.Resize, this.onResize);
     resizer.on(Events.ResizeEnd, this.onResizeEnd);
@@ -107,14 +118,17 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   }
 
   private mount() {
+    this.mountContainer();
     this.mountCtor();
     this.mountToRoot();
   }
 
-  private mountCtor() {
-    const content = this.options.ctor(this);
-    content.classList.add('wm-window-content');
-    this.element.insertAdjacentElement('beforeend', content);
+  private mountContainer() {
+    this.element.insertAdjacentElement('beforeend', this.container);
+  }
+
+  private async mountCtor() {
+    await this.options.ctor(this, this.container);
   }
 
   private mountToRoot() {
@@ -138,9 +152,7 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   private handleMaximized() {
     this.resizer.setAvailability(false);
     this.header.setAvailability(false);
-    const { bounds } = this.presetBoundsProcessor.getBounds(
-      PresetBound.Maximized
-    );
+    const { bounds } = this.presetBounds.getBounds(PresetBound.Maximized);
     this.updateElementBounds(bounds);
   }
 
@@ -165,7 +177,7 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   };
 
   private onDrag = ({ event }: { event: MouseEvent }) => {
-    const { bounds } = this.dragBoundsProcessor.getBounds(event, this.bounds);
+    const { bounds } = this.dragProcessor.getBounds(event, this.bounds);
     this.snap = this.snapProcessor.getSnap(event);
     this.emit(Events.Drag, { event, snap: this.snap });
 
@@ -177,7 +189,7 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
 
   private onDragEnd = ({ event }: { event: MouseEvent }) => {
     if (this.snap) {
-      const { bounds } = this.presetBoundsProcessor.getBounds(this.snap);
+      const { bounds } = this.presetBounds.getBounds(this.snap);
 
       this.setBounds(bounds);
       this.updateElementBounds(this.bounds);
@@ -212,7 +224,7 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
       resizerPosition,
     });
     if (!resizerPosition) return;
-    const { bounds } = this.resizeBoundsProcessor.getBounds(
+    const { bounds } = this.resizeProcessor.getBounds(
       event,
       this.bounds,
       resizerPosition
@@ -276,6 +288,7 @@ export class Window extends EventEmitter<WindowEvent> implements Component {
   }
 
   destroy() {
+    this.domEventDelegator.off(this.element, 'mousedown');
     this.header.off(Events.CloseWindow, this.onClose);
     this.header.off(Events.ExpandWindow, this.onExpand);
     this.header.off(Events.DragStart, this.onDragStart);

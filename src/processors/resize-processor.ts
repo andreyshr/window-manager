@@ -2,7 +2,7 @@ import { ResizerPosition } from '../components/resizer';
 import { BoundsProcessor } from './types';
 import { WindowBounds } from '../components/window';
 
-export class ResizeBoundsProcessor implements BoundsProcessor {
+export class ResizeProcessor implements BoundsProcessor {
   private root: HTMLElement;
 
   constructor(root: HTMLElement) {

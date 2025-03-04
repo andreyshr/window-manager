@@ -6,7 +6,6 @@ A lightweight and flexible window management library for organizing draggable an
 
 - 🖱️ **Drag & Resize** – Easily move and resize windows.
 - 🔄 **Sticky Mode** – Suggest predefined sizes when snapping to corners.
-- 🏗 **Modular Design** – Use only what you need.
 - ⚡ **Optimized for Performance** – Minimal overhead.
 
 ## 📦 Installation
@@ -34,7 +33,10 @@ const schema = [
     height: 50,
     position: [20, 20],
     isClosable: true,
-    ctor: () => document.createElement('div'),
+    ctor: (window, container) => {
+      const element = document.createElement('div');
+      container.appendChild(element);
+    },
   },
 ];
 const wm = new WindowManager(root, schema);

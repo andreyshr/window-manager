@@ -2,6 +2,7 @@ import { EventEmitter } from '../../event-emitter/event-emitter';
 import { Events, HeaderEvent } from '../../event-emitter/events';
 import { Controls } from './controls';
 import { Component } from '../../types';
+import { DomEventDelegator } from '../../dom-event-delegator/dom-event-delegator';
 
 export interface HeaderOptions {
   title: string;
@@ -15,7 +16,8 @@ export class Header extends EventEmitter<HeaderEvent> implements Component {
 
   constructor(
     private root: HTMLElement,
-    private options: HeaderOptions
+    private options: HeaderOptions,
+    private domEventDelegator: DomEventDelegator
   ) {
     super();
     this.element = this.createElement();
@@ -27,14 +29,18 @@ export class Header extends EventEmitter<HeaderEvent> implements Component {
     const element = document.createElement('div');
     element.className = 'wm-window-header';
     element.innerHTML = `<span class="wm-window-title">${this.options.title}</span>`;
-    element.addEventListener('mousedown', this.onMouseDown);
+    this.domEventDelegator.on('mousedown', element, this.onMouseDown);
     return element;
   }
 
   private createControls() {
-    const controls = new Controls(this.element, {
-      isClosable: this.options.isClosable,
-    });
+    const controls = new Controls(
+      this.element,
+      {
+        isClosable: this.options.isClosable,
+      },
+      this.domEventDelegator
+    );
     controls.on(Events.CloseWindow, this.onClose);
     controls.on(Events.ExpandWindow, this.onExpand);
     return controls;
@@ -80,6 +86,7 @@ export class Header extends EventEmitter<HeaderEvent> implements Component {
   }
 
   destroy() {
+    this.domEventDelegator.off(this.element, 'mousedown');
     this.controls.off(Events.CloseWindow, this.onClose);
     this.controls.off(Events.ExpandWindow, this.onExpand);
     this.controls.destroy();

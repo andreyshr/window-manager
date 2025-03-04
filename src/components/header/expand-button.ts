@@ -1,3 +1,4 @@
+import { DomEventDelegator } from '../../dom-event-delegator/dom-event-delegator';
 import { EventEmitter } from '../../event-emitter/event-emitter';
 import { Events, ExpandButtonEvent } from '../../event-emitter/events';
 import { Component } from '../../types';
@@ -11,7 +12,10 @@ export class ExpandButton
   private maximizeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"/></svg>`;
   private minimizeIcon = `<svg xmlns="http://www.w3.org/2000/svg"  width="12" height="12" viewBox="0 0 512 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M32 416c-17.7 0-32 14.3-32 32s14.3 32 32 32l448 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 416z"/></svg>`;
 
-  constructor(private root: HTMLElement) {
+  constructor(
+    private root: HTMLElement,
+    private domEventDelegator: DomEventDelegator
+  ) {
     super();
     this.element = this.createElement();
     this.mount();
@@ -21,7 +25,7 @@ export class ExpandButton
     const element = document.createElement('button');
     element.innerHTML = this.maximizeIcon;
     element.className = 'wm-window-button wm-window-expand-button';
-    element.addEventListener('click', this.onClick);
+    this.domEventDelegator.on('click', element, this.onClick);
     return element;
   }
 
@@ -42,6 +46,6 @@ export class ExpandButton
   }
 
   destroy() {
-    this.element.removeEventListener('click', this.onClick);
+    this.domEventDelegator.off(this.element, 'click');
   }
 }

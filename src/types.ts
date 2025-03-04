@@ -1,6 +1,6 @@
 import { Window } from './components/window';
 
-export type ItemSchema = {
+export type WindowSchema = {
   title: string;
   width: number;
   height: number;
@@ -10,7 +10,10 @@ export type ItemSchema = {
   props?: Record<string, unknown>;
 };
 
-export type ContentCtor = (window: Window) => HTMLElement;
+export type ContentCtor = (
+  window: Window,
+  container: HTMLElement
+) => Promise<void> | void;
 
 export interface Component {
   getElement: () => HTMLElement;

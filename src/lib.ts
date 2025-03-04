@@ -1,6 +1,6 @@
-import { Events } from './event-emitter/events';
 import { WindowManager } from './components/window-manager';
-import { type ItemSchema } from './types';
+import { Events } from './event-emitter/events';
 import './styles/style.css';
+import { type WindowSchema } from './types';
 
-export { Events, WindowManager, type ItemSchema };
+export { Events, WindowManager, type WindowSchema };

@@ -56,7 +56,7 @@ const PRESET_BOUNDS_CTORS: Record<PresetBound, () => WindowBounds> = {
   }),
 } as const;
 
-export class PresetBoundsProcessor implements BoundsProcessor {
+export class PresetBounds implements BoundsProcessor {
   getBounds(type: PresetBound) {
     return { bounds: PRESET_BOUNDS_CTORS[type]() };
   }

@@ -1,15 +1,15 @@
-import { PresetBound } from '../processors/preset-bounds-processor';
 import {
   MIN_WINDOW_HEIGHT,
   MIN_WINDOW_WIDTH,
   SNAP_THRESHOLD,
 } from '../constants';
+import { DomEventDelegator } from '../dom-event-delegator/dom-event-delegator';
 import { EventEmitter } from '../event-emitter/event-emitter';
 import { Events, WindowManagerEvent } from '../event-emitter/events';
-import { Window, WindowOptions } from './window';
 import { Snap } from '../processors/types';
+import { WindowSchema } from '../types';
 import { ResizerPosition } from './resizer';
-import { ItemSchema } from '../types';
+import { Window, WindowOptions } from './window';
 
 export type WindowManagerOptions = {
   snapThreshold?: number;
@@ -23,20 +23,23 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
   private options: ResolvedWindowManagerOptions;
   private element: HTMLElement;
   private content: Window[] = [];
+  private domEventDelegator: DomEventDelegator;
 
   constructor(
     private root: HTMLElement,
-    schema: ItemSchema[],
+    schema: WindowSchema[] = [],
     options?: WindowManagerOptions
   ) {
     super();
+    if (!root) throw new Error('Root element is not defined');
     this.options = this.mapOptions(options);
     this.element = this.createElement();
+    this.domEventDelegator = new DomEventDelegator(this.element);
     this.content = this.schemaToContent(schema);
     this.mount();
   }
 
-  addWindow(schema: ItemSchema) {
+  addWindow(schema: WindowSchema) {
     const window = this.createWindow(schema);
     this.content.push(window);
   }
@@ -69,7 +72,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     this.emit(Events.SelectWindow, { id });
   }
 
-  toJson(): ItemSchema[] {
+  toJson(): WindowSchema[] {
     return this.content.map((item) => ({
       title: item.getTitle(),
       width: item.getBounds().width,
@@ -105,25 +108,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
   }
 
   private hideSnapPreview() {
-    this.element.classList.remove('wm-container-snap-preview');
-    this.element.classList.remove(
-      `wm-container-snap-preview--${PresetBound.Left}`
-    );
-    this.element.classList.remove(
-      `wm-container-snap-preview--${PresetBound.Right}`
-    );
-    this.element.classList.remove(
-      `wm-container-snap-preview--${PresetBound.TopRight}`
-    );
-    this.element.classList.remove(
-      `wm-container-snap-preview--${PresetBound.TopLeft}`
-    );
-    this.element.classList.remove(
-      `wm-container-snap-preview--${PresetBound.BottomRight}`
-    );
-    this.element.classList.remove(
-      `wm-container-snap-preview--${PresetBound.BottomLeft}`
-    );
+    this.element.className = 'wm-container';
   }
 
   private createElement() {
@@ -132,7 +117,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     return element;
   }
 
-  private schemaToContent(schema: ItemSchema[]) {
+  private schemaToContent(schema: WindowSchema[]) {
     return schema.map((item, index) => this.createWindow(item, index));
   }
 
@@ -140,7 +125,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     this.root.insertAdjacentElement('beforeend', this.element);
   }
 
-  private createWindowOptions(schema: ItemSchema): WindowOptions {
+  private createWindowOptions(schema: WindowSchema): WindowOptions {
     return {
       ...this.options,
       title: schema.title,
@@ -155,14 +140,19 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     };
   }
 
-  private createWindow(schema: ItemSchema, _index?: number) {
+  private createWindow(schema: WindowSchema, _index?: number) {
     const index = _index
       ? _index
       : this.content.length <= 0
         ? 0
         : this.content.length + 1;
     const options = this.createWindowOptions(schema);
-    const window = new Window(this.element, index, options);
+    const window = new Window(
+      this.element,
+      index,
+      options,
+      this.domEventDelegator
+    );
     this.setListeners(window);
     return window;
   }

@@ -1,5 +1,5 @@
 import { WindowBounds } from '../components/window';
-import { PresetBound } from './preset-bounds-processor';
+import { PresetBound } from './preset-bounds';
 
 export interface BoundsProcessor {
   getBounds(...args: unknown[]): {

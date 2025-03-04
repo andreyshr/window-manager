@@ -1,4 +1,4 @@
-import { PresetBound } from './preset-bounds-processor';
+import { PresetBound } from './preset-bounds';
 import { Snap } from './types';
 
 export type SnapProcessorOptions = {

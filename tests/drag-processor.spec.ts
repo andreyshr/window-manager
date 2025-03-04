@@ -1,15 +1,15 @@
 import {
-  DragBoundsProcessor,
-  DragBoundsProcessorOptions,
-} from '../src/processors/drag-bounds-processor';
+  DragProcessor,
+  DragProcessorOptions,
+} from '../src/processors/drag-processor';
 import { WindowBounds } from '../src/components/window';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-describe('DragBoundsProcessor', () => {
+describe('DragProcessor', () => {
   let root: HTMLElement;
   let element: HTMLElement;
-  let options: DragBoundsProcessorOptions;
-  let processor: DragBoundsProcessor;
+  let options: DragProcessorOptions;
+  let processor: DragProcessor;
 
   beforeEach(() => {
     // Mock root and element elements
@@ -28,7 +28,7 @@ describe('DragBoundsProcessor', () => {
     options = { snapThreshold: 10 };
 
     // Create an instance of DragBoundsProcessor
-    processor = new DragBoundsProcessor(root, element, options);
+    processor = new DragProcessor(root, element, options);
   });
 
   it('should calculate the bounds correctly based on mouse movement', () => {
@@ -153,11 +153,4 @@ describe('DragBoundsProcessor', () => {
     expect(result.bounds.left).toBeNaN();
     expect(result.bounds.top).toBeNaN();
   });
-
-  //   it('should throw an error if bounds are empty', () => {
-  //     const bounds = {} as WindowBounds;
-  //     const event = { movementX: 10, movementY: 20 } as MouseEvent;
-
-  //     expect(() => processor.getBounds(event, bounds)).toThrow();
-  //   });
 });
