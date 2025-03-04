@@ -9,6 +9,12 @@ A lightweight and flexible window management library for organizing draggable an
 - 💾 **Save & Restore Configuration** – Save window states and restore them later.
 - ⚡ **Optimized for Performance** – Minimal overhead.
 
+[Simple Example Demo](https://glittery-selkie-e5f375.netlify.app)  
+ A basic demonstration of the library's functionality.
+
+[Demo with iframe widgets](https://cute-sopapillas-01fd90.netlify.app/)  
+ A more advanced demo showcasing iframe-based widgets.
+
 ## 📦 Installation
 
 ```sh
