@@ -5,10 +5,6 @@
   "module": "dist/index.es.js",
   "types": "dist/index.d.ts",
   "type": "module",
-  "exports": {
-    "import": "./dist/index.es.js",
-    "require": "./dist/index.cjs.js"
-  },
   "files": [
     "dist"
   ],
