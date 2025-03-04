@@ -3,11 +3,7 @@ import { BoundsProcessor } from './types';
 import { WindowBounds } from '../components/window';
 
 export class ResizeProcessor implements BoundsProcessor {
-  private root: HTMLElement;
-
-  constructor(root: HTMLElement) {
-    this.root = root;
-  }
+  constructor(private root: HTMLElement) {}
 
   getBounds(
     event: MouseEvent,

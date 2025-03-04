@@ -26,45 +26,50 @@ export class SnapProcessor {
 
   private isRightSnap(event: MouseEvent) {
     return (
-      this.root.offsetWidth - event.clientX < this.options.snapThreshold &&
-      event.clientY > this.options.snapThreshold &&
-      this.root.offsetHeight - event.clientY > this.options.snapThreshold
+      this.root.offsetWidth + this.root.offsetLeft - event.clientX <
+        this.options.snapThreshold &&
+      event.clientY - this.root.offsetTop > this.options.snapThreshold &&
+      this.root.offsetHeight + this.root.offsetTop - event.clientY >
+        this.options.snapThreshold
     );
   }
 
   private isLeftSnap(event: MouseEvent) {
     return (
-      event.clientX < this.options.snapThreshold &&
-      event.clientY > this.options.snapThreshold &&
-      this.root.offsetHeight - event.clientY > this.options.snapThreshold
+      event.clientX - this.root.offsetLeft < this.options.snapThreshold &&
+      event.clientY - this.root.offsetTop > this.options.snapThreshold &&
+      this.root.offsetHeight + this.root.offsetTop - event.clientY >
+        this.options.snapThreshold
     );
   }
 
   private isTopRightSnap(event: MouseEvent) {
     return (
-      this.root.offsetWidth - event.clientX < this.options.snapThreshold &&
-      event.clientY < this.options.snapThreshold
+      this.root.offsetWidth + this.root.offsetLeft - event.clientX <
+        this.options.snapThreshold &&
+      event.clientY - this.root.offsetTop < this.options.snapThreshold
     );
   }
 
   private isTopLeftSnap(event: MouseEvent) {
     return (
-      event.clientX < this.options.snapThreshold &&
-      event.clientY < this.options.snapThreshold
+      event.clientX - this.root.offsetLeft < this.options.snapThreshold &&
+      event.clientY - this.root.offsetTop < this.options.snapThreshold
     );
   }
 
   private isBottomRightSnap(event: MouseEvent) {
     return (
-      this.root.offsetHeight - event.clientY < this.options.snapThreshold &&
-      this.root.offsetWidth - event.clientX < this.options.snapThreshold
+      this.root.offsetWidth + this.root.offsetLeft - event.clientX <
+        this.options.snapThreshold &&
+      this.root.offsetHeight - event.clientY < this.options.snapThreshold
     );
   }
 
   private isBottomLeftSnap(event: MouseEvent) {
     return (
-      this.root.offsetHeight - event.clientY < this.options.snapThreshold &&
-      event.clientX < this.options.snapThreshold
+      event.clientX - this.root.offsetLeft < this.options.snapThreshold &&
+      this.root.offsetHeight - event.clientY < this.options.snapThreshold
     );
   }
 }
