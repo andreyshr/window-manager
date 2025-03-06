@@ -3,10 +3,12 @@ import { Events, HeaderEvent } from '../../event-emitter/events';
 import { Controls } from './controls';
 import { Component } from '../../types';
 import { DomEventDelegator } from '../../dom-event-delegator/dom-event-delegator';
+import { HEADER_HEIGHT } from '../../constants';
 
 export interface HeaderOptions {
   title: string;
   isClosable: boolean;
+  isExpandable: boolean;
 }
 
 export class Header extends EventEmitter<HeaderEvent> implements Component {
@@ -28,6 +30,7 @@ export class Header extends EventEmitter<HeaderEvent> implements Component {
   private createElement() {
     const element = document.createElement('div');
     element.className = 'wm-window-header';
+    element.style.height = `${HEADER_HEIGHT}px`;
     element.innerHTML = `<span class="wm-window-title">${this.options.title}</span>`;
     this.domEventDelegator.on('mousedown', element, this.onMouseDown);
     return element;
@@ -38,6 +41,7 @@ export class Header extends EventEmitter<HeaderEvent> implements Component {
       this.element,
       {
         isClosable: this.options.isClosable,
+        isExpandable: this.options.isExpandable,
       },
       this.domEventDelegator
     );

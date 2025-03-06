@@ -6,7 +6,8 @@ export type WindowSchema = {
   width: number;
   height: number;
   position: [number, number];
-  isClosable: boolean;
+  isClosable?: boolean;
+  isExpandable?: boolean;
   ctor?: ContentCtor;
   props?: Record<string, unknown>;
 };

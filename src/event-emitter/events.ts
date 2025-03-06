@@ -4,6 +4,7 @@ import { Snap } from '../processors/types';
 export const Events = {
   CloseWindow: 'window:close',
   SelectWindow: 'window:select',
+  UnselectWindow: 'window:unselect',
   ExpandWindow: 'window:expand',
   DragStart: 'drag:start',
   Drag: 'drag',
@@ -49,6 +50,7 @@ export type ResizerEvent = {
 export type WindowEvent = {
   [Events.CloseWindow]: { id: string };
   [Events.SelectWindow]: { id: string };
+  [Events.UnselectWindow]: { id: string };
   [Events.ExpandWindow]: { isMaximized: boolean };
   [Events.DragStart]: { event: MouseEvent };
   [Events.Drag]: { event: MouseEvent; snap: Snap | undefined };
@@ -67,6 +69,7 @@ export type WindowEvent = {
 export type WindowManagerEvent = {
   [Events.CloseWindow]: { id: string };
   [Events.SelectWindow]: { id: string };
+  [Events.UnselectWindow]: { id: string };
   [Events.ExpandWindow]: { isMaximized: boolean };
   [Events.DragStart]: { event: MouseEvent };
   [Events.Drag]: { event: MouseEvent; snap: Snap | undefined };

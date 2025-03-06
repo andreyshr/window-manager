@@ -1,4 +1,6 @@
 import {
+  IS_CLOSABLE,
+  IS_EXPANDABLE,
   MIN_WINDOW_HEIGHT,
   MIN_WINDOW_WIDTH,
   SNAP_THRESHOLD,
@@ -51,16 +53,16 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
   }
 
   addWindow(schema: WindowSchema) {
-    const window = this.createWindow(schema);
-    this.content.push(window);
+    const wmWindow = this.createWindow(schema);
+    this.content.push(wmWindow);
   }
 
   closeWindow(id: string) {
-    const window = this.content.find((item) => item.getUid() === id);
-    if (window) {
-      window.destroy();
+    const wmWindow = this.content.find((item) => item.getUid() === id);
+    if (wmWindow) {
+      wmWindow.destroy();
       this.content = this.content.filter((item) => item.getUid() !== id);
-      this.updateWindowIndexes();
+      this.updateStackOrder();
       this.emit(Events.CloseWindow, { id });
     }
   }
@@ -70,7 +72,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     if (index !== -1) {
       this.content.push(this.content.splice(index, 1)[0]);
     }
-    this.updateWindowIndexes();
+    this.updateStackOrder();
     this.emit(Events.SelectWindow, { id });
   }
 
@@ -79,7 +81,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     if (index !== -1) {
       this.content.unshift(this.content.splice(index, 1)[0]);
     }
-    this.updateWindowIndexes();
+    this.updateStackOrder();
     this.emit(Events.SelectWindow, { id });
   }
 
@@ -91,6 +93,7 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
       height: item.getBounds().height,
       position: [item.getBounds().left, item.getBounds().top],
       isClosable: item.getIsClosable(),
+      isExpandable: item.getIsExpandable(),
       ctor: item.getCtor(),
     }));
   }
@@ -146,7 +149,8 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
       ...this.options,
       title: schema.title,
       name: schema.name,
-      isClosable: schema.isClosable,
+      isClosable: schema.isClosable ?? IS_CLOSABLE,
+      isExpandable: schema.isExpandable ?? IS_EXPANDABLE,
       bounds: {
         width: schema.width,
         height: schema.height,
@@ -158,51 +162,56 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
     };
   }
 
-  private createWindow(schema: WindowSchema, _index?: number) {
-    const index = _index
-      ? _index
-      : this.content.length <= 0
-        ? 0
-        : this.content.length + 1;
+  private createWindow(schema: WindowSchema, index?: number) {
     const options = this.createWindowOptions(schema);
-    const window = new WmWindow(
+    const wmWindow = new WmWindow(
       this.element,
-      index,
+      this.computeStackOrder(index),
       options,
       this.domEventDelegator
     );
-    this.setListeners(window);
-    return window;
+    this.setListeners(wmWindow);
+    return wmWindow;
   }
 
-  private updateWindowIndexes() {
+  private computeStackOrder(index?: number) {
+    return index && index > 0
+      ? index + 1
+      : this.content.length <= 0
+        ? 1
+        : this.content.length + 1;
+  }
+
+  private updateStackOrder() {
     this.content.forEach((item, index) => {
-      item.setIndex(index);
+      item.setStackOrder(index);
     });
   }
 
-  private setListeners(window: WmWindow) {
-    window.on(Events.CloseWindow, this.onCloseWindow);
-    window.on(Events.SelectWindow, this.onSelectWindow);
-    window.on(Events.ExpandWindow, this.onExpandWindow);
-    window.on(Events.DragStart, this.onDragStart);
-    window.on(Events.Drag, this.onDrag);
-    window.on(Events.DragEnd, this.onDragEnd);
-    window.on(Events.ResizeStart, this.onResizeStart);
-    window.on(Events.Resize, this.onResize);
-    window.on(Events.ResizeEnd, this.onResizeEnd);
+  private setListeners(wmWindow: WmWindow) {
+    wmWindow.on(Events.CloseWindow, this.onCloseWindow);
+    wmWindow.on(Events.SelectWindow, this.onSelectWindow);
+    wmWindow.on(Events.UnselectWindow, this.onUnselectWindow);
+    wmWindow.on(Events.ExpandWindow, this.onExpandWindow);
+    wmWindow.on(Events.DragStart, this.onDragStart);
+    wmWindow.on(Events.Drag, this.onDrag);
+    wmWindow.on(Events.DragEnd, this.onDragEnd);
+    wmWindow.on(Events.ResizeStart, this.onResizeStart);
+    wmWindow.on(Events.Resize, this.onResize);
+    wmWindow.on(Events.ResizeEnd, this.onResizeEnd);
   }
 
-  private removeListeners(window: WmWindow) {
-    window.off(Events.CloseWindow, this.onCloseWindow);
-    window.off(Events.SelectWindow, this.onSelectWindow);
-    window.off(Events.ExpandWindow, this.onExpandWindow);
-    window.off(Events.DragStart, this.onDragStart);
-    window.off(Events.Drag, this.onDrag);
-    window.off(Events.DragEnd, this.onDragEnd);
-    window.off(Events.ResizeStart, this.onResizeStart);
-    window.off(Events.Resize, this.onResize);
-    window.off(Events.ResizeEnd, this.onResizeEnd);
+  private removeListeners(wmWindow: WmWindow) {
+    wmWindow.off(Events.CloseWindow, this.onCloseWindow);
+    wmWindow.off(Events.SelectWindow, this.onSelectWindow);
+    wmWindow.off(Events.UnselectWindow, this.onUnselectWindow);
+    wmWindow.off(Events.ExpandWindow, this.onExpandWindow);
+    wmWindow.off(Events.DragStart, this.onDragStart);
+    wmWindow.off(Events.Drag, this.onDrag);
+    wmWindow.off(Events.DragEnd, this.onDragEnd);
+    wmWindow.off(Events.ResizeStart, this.onResizeStart);
+    wmWindow.off(Events.Resize, this.onResize);
+    wmWindow.off(Events.ResizeEnd, this.onResizeEnd);
   }
 
   private onCloseWindow = ({ id }: { id: string }) => {
@@ -211,6 +220,10 @@ export class WindowManager extends EventEmitter<WindowManagerEvent> {
 
   private onSelectWindow = ({ id }: { id: string }) => {
     this.bringWindowToFront(id);
+  };
+
+  private onUnselectWindow = ({ id }: { id: string }) => {
+    this.emit(Events.UnselectWindow, { id });
   };
 
   private onExpandWindow = ({ isMaximized }: { isMaximized: boolean }) => {
