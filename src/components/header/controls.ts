@@ -7,12 +7,13 @@ import { DomEventDelegator } from '../../dom-event-delegator/dom-event-delegator
 
 export interface ControlsOptions {
   isClosable: boolean;
+  isExpandable: boolean;
 }
 
 export class Controls extends EventEmitter<ControlsEvent> implements Component {
   private element: HTMLElement;
   private closeButton?: CloseButton;
-  private expandButton: ExpandButton;
+  private expandButton?: ExpandButton;
 
   constructor(
     private root: HTMLElement,
@@ -21,7 +22,9 @@ export class Controls extends EventEmitter<ControlsEvent> implements Component {
   ) {
     super();
     this.element = this.createElement();
-    this.expandButton = this.createExpandButton();
+    if (this.options.isExpandable) {
+      this.expandButton = this.createExpandButton();
+    }
     if (this.options.isClosable) {
       this.closeButton = this.createCloseButton();
     }
@@ -64,8 +67,8 @@ export class Controls extends EventEmitter<ControlsEvent> implements Component {
 
   destroy() {
     this.closeButton?.off(Events.CloseWindow, this.onClose);
-    this.expandButton.off(Events.ExpandWindow, this.onExpand);
+    this.expandButton?.off(Events.ExpandWindow, this.onExpand);
     this.closeButton?.destroy();
-    this.expandButton.destroy();
+    this.expandButton?.destroy();
   }
 }

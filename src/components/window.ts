@@ -1,3 +1,4 @@
+import { HEADER_HEIGHT } from '../constants';
 import { DomEventDelegator } from '../dom-event-delegator/dom-event-delegator';
 import { EventEmitter } from '../event-emitter/event-emitter';
 import { Events, WindowEvent } from '../event-emitter/events';
@@ -19,6 +20,7 @@ export type WindowOptions = {
   title: string;
   name: string;
   isClosable: boolean;
+  isExpandable: boolean;
   ctor: ContentCtor;
   schema: WindowSchema;
 };
@@ -43,11 +45,13 @@ export class WmWindow extends EventEmitter<WindowEvent> implements Component {
   private minWidth: number;
   private minHeight: number;
   private snap: Snap | undefined = undefined;
+  private isSelected: boolean = false;
+  private isExpanded: boolean = false;
   private uid = uuid();
 
   constructor(
     private root: HTMLElement,
-    private index: number,
+    private stackOrder: number,
     private options: WindowOptions,
     private domEventDelegator: DomEventDelegator
   ) {
@@ -81,10 +85,8 @@ export class WmWindow extends EventEmitter<WindowEvent> implements Component {
   private createElement() {
     const element = document.createElement('div');
     element.className = 'wm-window';
-    element.style.zIndex = `${this.getZIndex()}`;
-    this.domEventDelegator.on('mousedown', element, () => {
-      this.emit(Events.SelectWindow, { id: this.uid });
-    });
+    element.style.zIndex = `${this.stackOrder}`;
+    this.domEventDelegator.on('mousedown', element, this.handleSelect);
     return element;
   }
 
@@ -99,6 +101,7 @@ export class WmWindow extends EventEmitter<WindowEvent> implements Component {
       this.element,
       {
         isClosable: this.options.isClosable,
+        isExpandable: this.options.isExpandable,
         title: this.options.title,
       },
       this.domEventDelegator
@@ -151,27 +154,37 @@ export class WmWindow extends EventEmitter<WindowEvent> implements Component {
     this.element.style.top = `${bounds.top}%`;
   }
 
-  private handleMaximized() {
-    this.resizer.setAvailability(false);
-    this.header.setAvailability(false);
-    const { bounds } = this.presetBounds.getBounds(PresetBound.Maximized);
-    this.updateElementBounds(bounds);
-  }
+  private handleSelect = () => {
+    this.isSelected = true;
+    this.element.classList.add('wm-window--selected');
+    this.emit(Events.SelectWindow, { id: this.uid });
 
-  private handleMinimized() {
-    this.resizer.setAvailability(true);
-    this.header.setAvailability(true);
-    const bounds = this.bounds;
-    this.updateElementBounds(bounds);
-  }
+    document.addEventListener('mousedown', this.handleUnselect);
+  };
+
+  private handleUnselect = (event: MouseEvent) => {
+    const eventTarget = event.target as HTMLElement;
+    if (!this.element.contains(eventTarget)) {
+      this.isSelected = false;
+      this.element.classList.remove('wm-window--selected');
+      this.emit(Events.UnselectWindow, { id: this.uid });
+
+      document.removeEventListener('mousedown', this.handleUnselect);
+    }
+  };
 
   private onCloseWindow = () => {
     this.emit(Events.CloseWindow, { id: this.uid });
   };
 
   private onExpandWindow = ({ isMaximized }: { isMaximized: boolean }) => {
-    if (isMaximized) this.handleMaximized();
-    else this.handleMinimized();
+    this.isExpanded = isMaximized;
+    this.resizer.setAvailability(!isMaximized);
+    this.header.setAvailability(!isMaximized);
+    const { bounds } = isMaximized
+      ? this.presetBounds.getBounds(PresetBound.Maximized)
+      : { bounds: this.bounds };
+    this.updateElementBounds(bounds);
     this.emit(Events.ExpandWindow, { isMaximized });
   };
 
@@ -196,8 +209,9 @@ export class WmWindow extends EventEmitter<WindowEvent> implements Component {
 
       this.setBounds(bounds);
       this.updateElementBounds(this.bounds);
+    } else {
+      this.validateBounds();
     }
-
     this.snap = undefined;
     this.emit(Events.DragEnd, { event });
   };
@@ -251,19 +265,26 @@ export class WmWindow extends EventEmitter<WindowEvent> implements Component {
     event: MouseEvent;
     resizerPosition: ResizerPosition | null;
   }) => {
+    this.validateBounds();
     this.emit(Events.ResizeEnd, {
       event,
       resizerPosition,
     });
   };
 
-  private getZIndex() {
-    return this.index + 1;
+  validateBounds() {
+    if (this.root.offsetHeight - this.element.offsetTop < HEADER_HEIGHT) {
+      const top =
+        ((this.root.offsetHeight - 2 * HEADER_HEIGHT) * 100) /
+        this.root.offsetHeight;
+      this.setBounds({ ...this.bounds, top });
+      this.updateElementBounds(this.bounds);
+    }
   }
 
-  setIndex(index: number) {
-    this.index = index;
-    this.element.style.zIndex = `${this.getZIndex()}`;
+  setStackOrder(stackOrder: number) {
+    this.stackOrder = stackOrder;
+    this.element.style.zIndex = `${this.stackOrder}`;
   }
 
   getUid() {
@@ -286,6 +307,10 @@ export class WmWindow extends EventEmitter<WindowEvent> implements Component {
     return this.options.isClosable;
   }
 
+  getIsExpandable() {
+    return this.options.isExpandable;
+  }
+
   getCtor() {
     return this.options.ctor;
   }
@@ -294,18 +319,37 @@ export class WmWindow extends EventEmitter<WindowEvent> implements Component {
     return this.options.name;
   }
 
+  getStackOrder() {
+    return this.stackOrder;
+  }
+
+  getIsSelected() {
+    return this.isSelected;
+  }
+
+  getIsExpanded() {
+    return this.isExpanded;
+  }
+
   destroy() {
+    // unsubscribe from DOM events
     this.domEventDelegator.off(this.element, 'mousedown');
+
+    // destroy header
     this.header.off(Events.CloseWindow, this.onCloseWindow);
     this.header.off(Events.ExpandWindow, this.onExpandWindow);
     this.header.off(Events.DragStart, this.onDragStart);
     this.header.off(Events.Drag, this.onDrag);
     this.header.off(Events.DragEnd, this.onDragEnd);
+    this.header.destroy();
+
+    // destroy resizer
     this.resizer.off(Events.ResizeStart, this.onResizeStart);
     this.resizer.off(Events.Resize, this.onResize);
     this.resizer.off(Events.ResizeEnd, this.onResizeEnd);
-    this.header.destroy();
     this.resizer.destroy();
+
+    // unmount element
     this.root.removeChild(this.element);
   }
 }
